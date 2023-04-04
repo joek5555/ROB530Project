@@ -14,7 +14,7 @@ robot1_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), 
 
 landmark_groundtruth = np.loadtxt(landmark_groundtruth_path)
 robot1_groundtruth = np.loadtxt(robot1_groundtruth_path)
-robot1_measurments = np.loadtxt(robot1_measurement_path)
+robot1_measurements = np.loadtxt(robot1_measurement_path)
 robot1_odometry = np.loadtxt(robot1_odometry_path)
 
 class system:
@@ -49,8 +49,8 @@ robot1_system.process_covariance = np.eye(3) * 0.0001
 robot1_system.process_input_size = 3
 robot1_system.initial_state = np.zeros(3)
 robot1_system.initial_covariance = np.eye(3) * 0.0001
-robot1_system.detected_landmarks = []
-robot1_system.detected_landmarks_pf = []
+robot1_system.detected_landmarks = {}
+# robot1_system.detected_landmarks_pf = []
 
 
 robot1_system.pf = particle_filter(robot1_system, num_particles= 100)
@@ -67,15 +67,19 @@ for odom_index in range(robot1_odometry.shape[0]):
     u = np.array([robot1_odometry[odom_index, 1], robot1_odometry[odom_index, 2], 0.0])
 
     robot1_system.pf.motion_step(u)
-    if robot1_measurments[measurement_index,0] == robot1_odometry[odom_index,0]:
-        z = np.array([robot1_measurments[measurement_index,2], robot1_measurments[measurement_index,3]])
+    if robot1_measurements[measurement_index,0] == robot1_odometry[odom_index,0]:
+        z = np.array([robot1_measurements[measurement_index,2], robot1_measurements[measurement_index,3]])
 
-        if robot1_measurments[measurement_index,1] in robot1_system.detected_landmarks:
-            pass
+        # check if landmark ID has been detected before
+        landmark_id = robot1_measurements[measurement_index,1]
+        if landmark_id in robot1_system.detected_landmarks.keys():
+            landmark_pf = robot1_system.detected_landmarks[landmark_id]
+            #landmark_pf.update(z,robot1_system.pf)
+
         else:
             landmark_pf = particle_filter_landmark(inv_measurement_model, measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
-            robot1_system.detected_landmarks_pf.append(landmark_pf)
-        measurement_index +=1 
+            robot1_system.detected_landmarks[landmark_id] = landmark_pf
+        measurement_index += 1 
 
 
     plot(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze(), robot1_system)

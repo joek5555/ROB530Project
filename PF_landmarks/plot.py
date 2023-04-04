@@ -15,14 +15,16 @@ def plot(groundtruth_x, groundtruth_y, landmarks_x, landmarks_y, robot1_system):
         ax.scatter(landmarks_x, landmarks_y, c='k', marker = "*")
         ax.scatter(robot1_particles_x, robot1_particles_y, s=1, c='b')
 
-        for landmark_pf in robot1_system.detected_landmarks_pf:
+        for landmark_id, landmark_pf in robot1_system.detected_landmarks.items():
+            if landmark_id == 6:
+                color = 'g'
+            elif landmark_id ==7:
+                 color = 'r'
             landmark_particles = np.array(landmark_pf.particles.x)
 
             landmark_particles_x = landmark_particles[:,0]
-            landmakr_particles_y = landmark_particles[:,1]
-            #print(landmark_particles_x)
-            #print(landmakr_particles_y)
-            ax.scatter(landmark_particles_x, landmakr_particles_y, s=1, c='g')
+            landmark_particles_y = landmark_particles[:,1]
+            ax.scatter(landmark_particles_x, landmark_particles_y, s=1, c=color)
 
                 
         ax.legend(['groundtruth','landmarks', 'particles'])

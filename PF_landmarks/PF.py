@@ -61,14 +61,42 @@ class particle_filter_landmark:
         self.num_particles = len(robot_pf.particles.x) * num_samples_per_robot_particle
         self.measurement_covariance = measurement_covariance
         self.measurement_covariance_L = np.linalg.cholesky(measurement_covariance)
+        self.num_samples_per_robot_particle = num_samples_per_robot_particle
 
         for particle in robot_pf.particles.x:
             detected_landmark_location = inv_measurement_model(particle.squeeze(), z)
 
-            for i in range (num_samples_per_robot_particle):
+            for i in range (self.num_samples_per_robot_particle):
                 sample_measurement_noise = self.measurement_covariance_L @ randn(z.shape[0],1)
-                #print(sample_measurement_noise)
-                self.particles.x.append(detected_landmark_location + sample_measurement_noise)
+                self.particles.x.append(detected_landmark_location + sample_measurement_noise.squeeze())
                 self.particles.weights.append(1/self.num_particles)
+
+
+        def update(self, z, robot_pf):
+            for particle in robot_pf.particles.x:
+                detected_landmark_location = inv_measurement_model(particle.squeeze(), z)
+                updated_landmark_x = []
+                updated_landmark_weights = []
+
+                for i in range (self.num_samples_per_robot_particle):
+                    sample_measurement_noise = self.measurement_covariance_L @ randn(z.shape[0],1)
+                    updated_landmark_x.append(detected_landmark_location + sample_measurement_noise.squeeze())
+                    updated_landmark_weights.append(1/self.num_particles)
+
+        
+def calculateMeanCovLandmarkPF(particle_list):
+
+    particle_array = np.array(particle_list)
+    particle_average = np.sum(particle_array, axis=0) / particle_array.shape[0]
+
+    zero_mean = particle_array - np.tile(particle_average, (particle_array.shape[0], 1))
+    
+
+    particle_covariance = zero_mean.T @ zero_mean / particle_array.shape[0]
+
+    return particle_average, particle_covariance
+    
+
+    
 
         
