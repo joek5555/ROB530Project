@@ -2,7 +2,8 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-from PF import particle_filter
+from PF import particle_filter, particle_filter_landmark
+from plot import plot
 
 
 
@@ -33,24 +34,53 @@ def process_model(x,u):
     output[2] = x[2] + u[1] + u[2]
     return output
 
+def inv_measurement_model(x,z):
+    output = np.zeros(2)
+    output[0] = x[0] + z[0]* np.cos(x[2] + z[1])
+    output[1] = x[1] + z[0] * np.sin(x[2] + z[1])
+    return output
+
+measurement_covariance = np.eye(2) * .0001
 
 robot1_system = system()
 
 robot1_system.process_model = process_model
 robot1_system.process_covariance = np.eye(3) * 0.0001
 robot1_system.process_input_size = 3
-robot1_initial_state = np.zeros(3)
+robot1_system.initial_state = np.zeros(3)
+robot1_system.initial_covariance = np.eye(3) * 0.0001
+robot1_system.detected_landmarks = []
+robot1_system.detected_landmarks_pf = []
+
+
+robot1_system.pf = particle_filter(robot1_system, num_particles= 100)
 
 
 
-robot1_pf = particle_filter(robot1_system, num_particles= 100, initial_state= robot1_initial_state, initial_covariance=np.eye(3))
 
+
+
+measurement_index = 0
 for odom_index in range(robot1_odometry.shape[0]):
     t = robot1_odometry[odom_index, 0]
 
     u = np.array([robot1_odometry[odom_index, 1], robot1_odometry[odom_index, 2], 0.0])
 
-    robot1_pf.motion_step(u)
-    robot1_pf.plot_particles(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze())
+    robot1_system.pf.motion_step(u)
+    if robot1_measurments[measurement_index,0] == robot1_odometry[odom_index,0]:
+        z = np.array([robot1_measurments[measurement_index,2], robot1_measurments[measurement_index,3]])
+
+        if robot1_measurments[measurement_index,1] in robot1_system.detected_landmarks:
+            pass
+        else:
+            landmark_pf = particle_filter_landmark(inv_measurement_model, measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
+            robot1_system.detected_landmarks_pf.append(landmark_pf)
+        measurement_index +=1 
+
+
+    plot(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze(), robot1_system)
+
+
+
 
 
