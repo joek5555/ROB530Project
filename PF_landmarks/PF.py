@@ -145,12 +145,13 @@ class particle_filter_landmark:
             likelihood_x_rolling = np.roll(likelihood_x_rolling, 1, axis = 0)
 
         particles_weight = np.reciprocal( np.concatenate((prior_updated_weight,likelihood_updated_weight)) )
+        # normalize the weights 
+        particles_weight = particles_weight / np.sum(particles_weight)
         self.particles.weights =  particles_weight.tolist()
-        #particles_weight = np.sort(particles_weight)
+
         particles_x = np.concatenate((prior_x, likelihood_x), axis = 0)
         self.particles.x = particles_x.tolist()
-        #with np.printoptions(threshold=np.inf):
-        #    print(np.sort(particles_weight))
+
 
         return likelihood_landmark_x
 
