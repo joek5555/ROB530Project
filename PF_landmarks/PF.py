@@ -32,8 +32,9 @@ class particle_filter:
         initial_covariance_L = np.linalg.cholesky(self.initial_covariance)
 
         for i in range(self.num_particles):
-            #self.particles.x.append(np.dot(initial_covariance_L, randn(len(initial_state), 1)) + initial_state)
-            self.particles.x.append(self.initial_state)
+
+            self.particles.x.append((np.dot(initial_covariance_L, randn(self.initial_state.shape[0], 1)) + self.initial_state).reshape(-1))
+            #self.particles.x.append(self.initial_state)
             self.particles.weights.append(1/self.num_particles)
 
     def motion_step(self, u):
@@ -57,9 +58,11 @@ class particle_filter:
             new_weights[i] = multivariate_normal.pdf(innovation, np.array([0,0]), landmark_cov + self.measurement_covariance)
 
         # update weights using Bayes Rule
-        self.particles.weights = np.multiply(self.particles.weights, new_weights)
+        new_weights = np.multiply(np.array(self.particles.weights), new_weights)
         # normalize
-        self.particles.weights = self.particles.weights/ np.sum(self.particles.weights)
+        new_weights = new_weights/ np.sum(new_weights)
+
+        self.particles.weights = new_weights.tolist()
 
         self.resampling()
 
@@ -138,23 +141,30 @@ class particle_filter_landmark:
         for i in range(self.num_particles):
             prior_updated_weight += np.sum((prior_x - likelihood_x_rolling) ** 2, axis = 1)
             likelihood_updated_weight += np.sum((likelihood_x - prior_x_rolling)**2, axis = 1)
-            np.roll(prior_x_rolling, 1, axis = 0)
-            np.roll(likelihood_x_rolling, 1, axis = 0)
+            prior_x_rolling = np.roll(prior_x_rolling, 1, axis = 0)
+            likelihood_x_rolling = np.roll(likelihood_x_rolling, 1, axis = 0)
 
-        particles_weight = np.concatenate((prior_updated_weight,likelihood_updated_weight))
-        particles_weight = np.reciprocal(particles_weight)
+        particles_weight = np.reciprocal( np.concatenate((prior_updated_weight,likelihood_updated_weight)) )
+        self.particles.weights =  particles_weight.tolist()
         #particles_weight = np.sort(particles_weight)
         particles_x = np.concatenate((prior_x, likelihood_x), axis = 0)
+        self.particles.x = particles_x.tolist()
+        #with np.printoptions(threshold=np.inf):
+        #    print(np.sort(particles_weight))
 
-        return likelihood_landmark_x, particles_x, particles_weight
+        return likelihood_landmark_x
 
 
 
         
-    def resampling(self, particles_x, particles_weight):
+    def resampling(self):
         # low variance resampling
+
+        particles_weight = np.array(self.particles.weights)
+        particles_x = np.array(self.particles.x)
         self.particles.x.clear()
         self.particles.weights.clear()
+
 
         W = np.cumsum(particles_weight)
 
