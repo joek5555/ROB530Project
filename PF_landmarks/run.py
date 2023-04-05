@@ -74,7 +74,7 @@ for odom_index in range(robot1_odometry.shape[0]):
         landmark_id = robot1_measurements[measurement_index,1]
         if landmark_id in robot1_system.detected_landmarks.keys():
             landmark_pf = robot1_system.detected_landmarks[landmark_id]
-            #landmark_pf.update(z,robot1_system.pf)
+            landmark_pf.update(z,robot1_system.pf)
 
         else:
             landmark_pf = particle_filter_landmark(inv_measurement_model, measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
