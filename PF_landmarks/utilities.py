@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 
 
-def plot(groundtruth_x, groundtruth_y, landmarks_x, landmarks_y, robot1_system, additional_landmark = None):
+def plot(groundtruth_x, groundtruth_y, landmarks_x, landmarks_y, robot1_system, additional_landmark = np.empty(0)):
 
         robot1_particles = np.array(robot1_system.pf.particles.x)
         #print([particles])
@@ -26,7 +26,7 @@ def plot(groundtruth_x, groundtruth_y, landmarks_x, landmarks_y, robot1_system, 
             landmark_particles_y = landmark_particles[:,1]
             ax.scatter(landmark_particles_x, landmark_particles_y, s=1, c=color)
         
-        if additional_landmark != None:
+        if np.any(additional_landmark):
             additional_landmark_array = np.array(additional_landmark)
             additional_landmark_x = additional_landmark_array[:,0]
             additional_landmark_y = additional_landmark_array[:,1]
