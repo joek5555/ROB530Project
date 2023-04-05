@@ -1,7 +1,8 @@
 import numpy as np
 import os
+import matplotlib
+matplotlib.use('agg')
 import matplotlib.pyplot as plt
-
 from PF import particle_filter, particle_filter_landmark
 from plot import plot
 
