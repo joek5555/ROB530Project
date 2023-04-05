@@ -2,8 +2,9 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
-from PF import particle_filter, particle_filter_landmark
-from plot import plot
+from PF import particle_filter, particle_filter_landmark, calculateMeanCovLandmarkPF
+from utilities import plot, wrap2Pi
+
 
 
 
@@ -25,6 +26,9 @@ class system:
 
         self.measurement_model = None
         self.measurement_covariance = None
+        self.initial_state = None
+        self.initial_covariance = None
+        self.detected_landmarks = None
 
 def process_model(x,u):
 
@@ -40,17 +44,25 @@ def inv_measurement_model(x,z):
     output[1] = x[1] + z[0] * np.sin(x[2] + z[1])
     return output
 
-measurement_covariance = np.eye(2) * .0001
+def measurement_model(x,landmark):
+    output = np.zeros(2)
+    output[0] = np.sqrt((landmark[1] - x[1])**2 + (landmark[0] - x[0])**2)
+    output[1] = wrap2Pi(np.arctan2(landmark[1] - x[1], landmark[0] - x[0]) - x[2])
+    return output
+
 
 robot1_system = system()
 
 robot1_system.process_model = process_model
 robot1_system.process_covariance = np.eye(3) * 0.0001
 robot1_system.process_input_size = 3
+robot1_system.measurement_model = measurement_model
+robot1_system.measurement_covariance = np.eye(2) * .0001
 robot1_system.initial_state = np.zeros(3)
 robot1_system.initial_covariance = np.eye(3) * 0.0001
 robot1_system.detected_landmarks = {}
-# robot1_system.detected_landmarks_pf = []
+
+
 
 
 robot1_system.pf = particle_filter(robot1_system, num_particles= 100)
@@ -74,10 +86,16 @@ for odom_index in range(robot1_odometry.shape[0]):
         landmark_id = robot1_measurements[measurement_index,1]
         if landmark_id in robot1_system.detected_landmarks.keys():
             landmark_pf = robot1_system.detected_landmarks[landmark_id]
-            #landmark_pf.update(z,robot1_system.pf)
+            likelihood_landmark_x, particles_x, particles_weight = landmark_pf.update(z,robot1_system.pf)
+            plot(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze(), robot1_system, additional_landmark = likelihood_landmark_x)
+            landmark_pf.resampling(particles_x, particles_weight)
+
+            landmark_mean, landmark_cov = calculateMeanCovLandmarkPF(landmark_pf.particles.x)
+            robot1_system.pf.measurement_step(z, landmark_mean, landmark_cov)
+
 
         else:
-            landmark_pf = particle_filter_landmark(inv_measurement_model, measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
+            landmark_pf = particle_filter_landmark(inv_measurement_model, robot1_system.measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
             robot1_system.detected_landmarks[landmark_id] = landmark_pf
         measurement_index += 1 
 
