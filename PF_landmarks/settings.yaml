@@ -1,0 +1,17 @@
+
+
+num_robots: 2
+
+num_particles_robots: 100
+num_measurement_particles_per_robot_particle: 10
+max_runtime: 30
+
+robot_covariance_x: 0.0001
+robot_covariance_y: 0.0001
+robot_covariance_z: 0.0001
+
+
+
+
+
+
