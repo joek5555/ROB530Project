@@ -89,7 +89,7 @@ class particle_filter_landmark:
         #calculate mean and cov for updated
         updated_mean, updated_cov = calculateMeanCovLandmarkPF(updated_landmarks.x)
         #combine
-        combined_mean, combined_cov = combine_gaussians(curr_mean, curr_cov, updated_mean, updated_cov)
+        combined_mean, combined_cov = combine_gaussians(self, curr_mean, curr_cov, updated_mean, updated_cov)
         self.mean = combined_mean
         self.cov = combined_cov
         #low variance resampling to sample 1000 points from this distribution
@@ -109,10 +109,10 @@ def calculateMeanCovLandmarkPF(particle_list):
 
     return particle_average, particle_covariance
 
-def combine_gaussians(mu_1, sigma_1, mu_2, sigma_2):
-    combined_mu = mu_2 * (sigma_1**2) / (sigma_1**2 + sigma_2**2) + mu_1 * (sigma_2**2) / (sigma_1**2 + sigma_2**2)
-    print(sigma_1, sigma_2)
-    combined_cov = sigma_1**2*sigma_2**2/(sigma_1**2 + sigma_2**2)
+def combine_gaussians(self, old_mu, old_sigma, new_mu, new_sigma):
+    combined_cov = np.linalg.inv(np.linalg.inv(old_sigma) +  self.num_samples_per_robot_particle*np.linalg.inv(new_sigma))
+    combined_mu =  combined_cov @ \
+                    (np.linalg.inv(old_sigma) @ old_mu + self.num_samples_per_robot_particle*np.linalg.inv(new_sigma) @ new_mu)
     return combined_mu, combined_cov
     
 
