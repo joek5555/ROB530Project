@@ -23,6 +23,8 @@ class particle_filter:
         self.measurement_covariance = system.measurement_covariance
         #self.measurement_covariance_L = np.linalg.cholesky(self.measurement_covariance)
         self.initial_state = system.initial_state
+
+
         self.initial_covariance = system.initial_covariance
 
         self.num_particles = num_particles
@@ -34,7 +36,6 @@ class particle_filter:
         for i in range(self.num_particles):
 
             self.particles.x.append((np.dot(initial_covariance_L, randn(self.initial_state.shape[0], 1)) + self.initial_state).reshape(-1))
-            #self.particles.x.append(self.initial_state)
             self.particles.weights.append(1/self.num_particles)
 
     def motion_step(self, u):
@@ -152,6 +153,9 @@ class particle_filter_landmark:
         particles_x = np.concatenate((prior_x, likelihood_x), axis = 0)
         self.particles.x = particles_x.tolist()
 
+        #with np.printoptions(threshold=np.inf):
+        #    print(np.sort(particles_weight))
+
 
         return likelihood_landmark_x
 
@@ -163,9 +167,16 @@ class particle_filter_landmark:
 
         particles_weight = np.array(self.particles.weights)
         particles_x = np.array(self.particles.x)
+
+        self.particles.weights.sort()
+        #print(self.particles.weights)
+
         self.particles.x.clear()
         self.particles.weights.clear()
-
+        
+        list_num_times = []
+        num_times = 0
+        list_weights = []
 
         W = np.cumsum(particles_weight)
 
@@ -177,8 +188,16 @@ class particle_filter_landmark:
             u = r +  i/ self.num_particles
             while u > W[j]:
                 j = j + 1
+                num_times += 1
+            list_num_times.append(num_times)
+            num_times = 0
             self.particles.x.append(particles_x[j, :])
+            list_weights.append(particles_weight[j])
             self.particles.weights.append( 1 / self.num_particles)
+
+        #print(list_num_times)
+        list_weights.sort()
+        #print(list_weights)
         
 
 
