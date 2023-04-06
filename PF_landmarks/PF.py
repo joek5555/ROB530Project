@@ -198,6 +198,37 @@ class particle_filter_landmark:
         #print(list_num_times)
         list_weights.sort()
         #print(list_weights)
+
+
+
+    def resampling_sample_normal(self, num_points_resample):
+        # low variance resampling
+
+        particles_x = np.array(self.particles.x)
+        particles_weights = np.array(self.particles.weights)
+        self.particles.x.clear()
+        self.particles.weights.clear()
+
+        W = np.cumsum(particles_weights)
+
+        r = np.random.rand(1) / num_points_resample
+        # r = 0.5 / self.n
+        j = 0 # one change, j = 1 in original, but then you can never select first particle, even if it has high weight
+        for i in range(num_points_resample):
+
+            u = r +  i/ self.num_particles
+            while u > W[j]:
+                j = j + 1
+            self.particles.x.append(particles_x[j, :])
+
+        #particle_mean, particle_covariance =  calculateMeanCovLandmarkPF(self.particles.x)
+        #for i in range(num_points_resample, self.num_particles, 1):
+        #    self.particles.x.append(multivariate_normal.rvs(particle_mean, particle_covariance).squeeze())
+
+
+            
+        particles_weights = np.ones(self.num_particles) * (1/self.num_particles)    
+        self.particles.weights = particles_weights.tolist()
         
 
 

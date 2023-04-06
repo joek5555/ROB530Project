@@ -87,8 +87,8 @@ robot2_system.pf = particle_filter(robot2_system, num_particles= 100)
 
 
 
-
-
+num_robots = 2
+percent_to_resample_landmarks = 1
 robot1_measurement_index = 0
 robot2_measurement_index = 0
 
@@ -106,23 +106,35 @@ for odom_index in range(robot1_odometry.shape[0]):
 
         # check if landmark ID has been detected before
         landmark_id = robot1_measurements[robot1_measurement_index,1]
-        if landmark_id in robot1_system.detected_landmarks.keys():
+
+        if landmark_id <= num_robots:
+            detected_robot_mean, detected_robot_covariance = calculateMeanCovLandmarkPF(robot1_system.pf.particles.x)
+            robot1_system.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
+
+        elif landmark_id in robot1_system.detected_landmarks.keys():
             landmark_pf = robot1_system.detected_landmarks[landmark_id]
             likelihood_landmark_x = landmark_pf.update(z,robot1_system.pf)
             plot(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), robot2_groundtruth[:,1].squeeze(), robot2_groundtruth[:,2].squeeze(), 
                  landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze(), robot1_system, robot2_system, 
                  additional_landmark = likelihood_landmark_x, main_robot=1, timestep = odom_index)
 
-            landmark_pf.resampling()
+            #landmark_pf.resampling()
+            landmark_pf.resampling_sample_normal(int(landmark_pf.num_particles * percent_to_resample_landmarks))
 
             landmark_mean, landmark_cov = calculateMeanCovLandmarkPF(landmark_pf.particles.x)
             robot1_system.pf.measurement_step(z, landmark_mean, landmark_cov)
+            print("landmark 1 update")
+            print(landmark_mean)
+            print(landmark_cov)
 
 
         else:
             landmark_pf = particle_filter_landmark(inv_measurement_model, robot1_system.measurement_covariance, z, robot1_system.pf, num_samples_per_robot_particle=10)
             robot1_system.detected_landmarks[landmark_id] = landmark_pf
             landmark_mean, landmark_cov = calculateMeanCovLandmarkPF(landmark_pf.particles.x)
+            print("landmark 1 initialize")
+            print(landmark_mean)
+            print(landmark_cov)
             
         robot1_measurement_index += 1 
 
@@ -143,21 +155,38 @@ for odom_index in range(robot1_odometry.shape[0]):
 
         # check if landmark ID has been detected before
         landmark_id = robot2_measurements[robot2_measurement_index,1]
-        if landmark_id in robot2_system.detected_landmarks.keys():
+
+        if landmark_id <= num_robots:
+            detected_robot_mean, detected_robot_covariance = calculateMeanCovLandmarkPF(robot1_system.pf.particles.x)
+            robot2_system.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
+
+        elif landmark_id in robot2_system.detected_landmarks.keys():
             landmark_pf = robot2_system.detected_landmarks[landmark_id]
             likelihood_landmark_x = landmark_pf.update(z,robot2_system.pf)
             plot(robot1_groundtruth[:,1].squeeze(), robot1_groundtruth[:,2].squeeze(), robot2_groundtruth[:,1].squeeze(), robot2_groundtruth[:,2].squeeze(), 
                  landmark_groundtruth[:,1].squeeze(), landmark_groundtruth[:,2].squeeze(), robot1_system, robot2_system, 
                  additional_landmark = likelihood_landmark_x, main_robot=2, timestep = odom_index)
 
-            landmark_pf.resampling()
+            #landmark_pf.resampling()
+            landmark_pf.resampling_sample_normal(int(landmark_pf.num_particles * percent_to_resample_landmarks))
 
             landmark_mean, landmark_cov = calculateMeanCovLandmarkPF(landmark_pf.particles.x)
+            robot2_system.pf.measurement_step(z, landmark_mean, landmark_cov)
+
+            print("landmark 2 update")
+            print(landmark_mean)
+            print(landmark_cov)
             
 
         else:
             landmark_pf = particle_filter_landmark(inv_measurement_model, robot2_system.measurement_covariance, z, robot2_system.pf, num_samples_per_robot_particle=10)
             robot2_system.detected_landmarks[landmark_id] = landmark_pf
+
+            landmark_mean, landmark_cov = calculateMeanCovLandmarkPF(landmark_pf.particles.x)
+
+            print("landmark 2 initialize")
+            print(landmark_mean)
+            print(landmark_cov)
         
         robot2_measurement_index += 1 
 
