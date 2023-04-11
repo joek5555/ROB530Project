@@ -45,7 +45,7 @@ def read_data():
     return(data)
 
 def calculateMeanCovFromList(particle_list):
-
+    """
     particle_array = np.array(particle_list)
     particle_mean = np.sum(particle_array, axis=0) / particle_array.shape[0]
 
@@ -54,7 +54,43 @@ def calculateMeanCovFromList(particle_list):
 
     particle_covariance = zero_mean.T @ zero_mean / particle_array.shape[0]
 
+    # check to raise error if not positive definite
+    np.linalg.cholesky(particle_covariance)
+    print("ran calculateMeanCovFromList correctly")
+
+
     return particle_mean, particle_covariance
+    """
+
+    particle_array = np.array(particle_list)
+
+    #particle_mean = np.sum(particle_array, axis=0) / particle_array.shape[0]
+    particle_mean = np.mean(particle_array, axis = 0)
+    #print(particle_array)
+    #print(particle_mean)
+    #print(particle_mean.shape[0])
+
+    if particle_mean.shape[0] == 3:
+        sinSum = 0
+        cosSum = 0
+        for s in range(particle_array.shape[0]):
+            cosSum += np.cos(particle_array[s,2])
+            sinSum += np.sin(particle_array[s,2])
+        particle_mean[2] = np.arctan2(sinSum, cosSum)
+
+    zero_mean = np.zeros_like(particle_array) 
+    for s in range(particle_array.shape[0]):
+        zero_mean[s,:] = particle_array[s,:] - particle_mean
+        if particle_mean.shape[0] == 3:
+            zero_mean[s,2] = wrap2Pi(zero_mean[s,2]) 
+
+    particle_covariance = zero_mean.T @ zero_mean / particle_array.shape[0]
+    np.linalg.cholesky(particle_covariance)
+    #print("ran calculateMeanCovFromList correctly")
+    #print(particle_covariance)
+
+    return particle_mean, particle_covariance
+
 
 
 def wrap2Pi(input):
