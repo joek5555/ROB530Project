@@ -135,9 +135,11 @@ while True:
             plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], 
                  observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id)
             
+            #update the landmark's particle filter
             robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
             #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
             #robot.detected_landmarks_pf[landmark_id].measurement_step_combine_gaussians(detected_landmark_mean, detected_landmark_covariance)
+            
             # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
             landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
             print(current_landmark_mean)

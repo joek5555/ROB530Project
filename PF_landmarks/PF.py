@@ -69,6 +69,9 @@ class particle_filter:
         else:
             print("ERROR: Atempting to run motion step when either process_input_size, process_covariance, or process_model is not defined")
 
+
+    #update robot location | measurement of other robot or landmark
+    #OG Kalman Filter
     def measurement_step(self, z, landmark_mean, landmark_cov):
         
         if self.measurement_model is not None and self.measurement_covariance is not None:
@@ -90,12 +93,15 @@ class particle_filter:
 
             self.particles.weight = new_weights.tolist()
 
-            self.resampling()
-            #self.resampling(num_top_particles = 100)
+            #self.resampling()
+            self.resampling(num_top_particles = 200)
 
         else:
             print("ERROR: Atempting to run measurement step when either measurement_covariance or measurement_model is not defined")
 
+
+    #update landmark location | detection
+    #Kalman filter
     def measurement_step_landmarks(self, detected_landmark_mean, detected_landmark_cov):
 
         new_weights = np.zeros([self.num_particles])
@@ -118,7 +124,9 @@ class particle_filter:
         self.resampling(num_top_particles = 500)
 
 
-    
+
+    #update robot location | measurement of other robot or landmark  
+    #brute force comparison (particle to particle)  
     def measurement_step_compare_particles(self,detected_landmark_particles):
 
         prior_state = np.array(self.particles.state)
@@ -145,7 +153,8 @@ class particle_filter:
 
         self.resampling()
         
-
+    #update robot location | measurement of other robot or landmark
+    #Piazza math
     def measurement_step_combine_gaussians(self, likelihood_mean, likelihood_covariance):
         prior_mean, prior_covariance = calculateMeanCovFromList(self.particles.state)
         posterior_mean = np.linalg.inv(np.linalg.inv(prior_covariance) + self.num_particles * np.linalg.inv(likelihood_covariance))@(
