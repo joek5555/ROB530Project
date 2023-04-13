@@ -266,6 +266,10 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
 
 
     if observed_landmark_particles is None:
+        axs[0].set_xlim([3,4])
+        axs[0].set_ylim([-3.5,-2.5])
+        axs[1].set_xlim([0.5,1])
+        axs[1].set_ylim([-1.5,-1])
         plt.savefig(path_to_images + "/image_" + str(image_num) +"_time_" + str(current_time) + "_result.png")
         plt.close()
 

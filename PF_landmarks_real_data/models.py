@@ -2,12 +2,12 @@ import numpy as np
 from utils import wrap2Pi
 
 
-def process_model(x,u):
+def process_model(x,u, dt):
 
     output = np.zeros(3)
-    output[0] = x[0] + (-u[0] / u[1] * np.sin(x[2]) + u[0] / u[1] * np.sin(x[2] + u[1]))
-    output[1] = x[1] + ( u[0] / u[1] * np.cos(x[2]) - u[0] / u[1] * np.cos(x[2] + u[1]))
-    output[2] = x[2] + u[1] + u[2]
+    output[0] = x[0] + (-u[0] / u[1] * np.sin(x[2]) + u[0] / u[1] * np.sin(x[2] + u[1] * dt))
+    output[1] = x[1] + ( u[0] / u[1] * np.cos(x[2]) - u[0] / u[1] * np.cos(x[2] + u[1] * dt))
+    output[2] = x[2] + u[1]*dt + u[2]*dt
     return output
 
 def inv_measurement_model(x,z):

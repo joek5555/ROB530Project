@@ -56,7 +56,7 @@ class particle_filter:
         
 
 
-    def motion_step(self, u):
+    def motion_step(self, u, dt):
 
         if self.process_input_size is not None and self.process_covariance is not None and self.process_model is not None:
 
@@ -64,7 +64,7 @@ class particle_filter:
                 # generate noise to apply to the input
                 sample_input_noise = self.process_covariance_L @ np.random.randn(self.process_input_size,1)
 
-                self.particles.state[i] = self.process_model(self.particles.state[i], u + sample_input_noise.squeeze())
+                self.particles.state[i] = self.process_model(self.particles.state[i], u + sample_input_noise.squeeze(), dt)
                 #self.particles.state[i] = self.process_model(self.particles.state[i], u)
         else:
             print("ERROR: Atempting to run motion step when either process_input_size, process_covariance, or process_model is not defined")

@@ -84,7 +84,13 @@ while True:
         # calculate input u at this timestep
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
         # perform the motion step
-        robot.pf.motion_step(u)
+        if robot.odometry_index == 0:
+            dt = robot.odometry_data[robot.odometry_index+1, 0] - robot.odometry_data[robot.odometry_index, 0]
+        else:
+            dt = robot.odometry_data[robot.odometry_index, 0] - robot.odometry_data[robot.odometry_index - 1, 0]
+
+        print(dt)
+        robot.pf.motion_step(u, dt)
         
         # if the robot did not have a forward velocity, then we will not be able to visually see the result
         # so do not plot
