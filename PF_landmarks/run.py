@@ -114,9 +114,17 @@ while True:
             
             # if you detect another robot
             # 'communicate' with the robot and get the mean and covariance associated with its location
-            detected_robot_mean, detected_robot_covariance = calculateMeanCovFromList(robot_list[landmark_id-1].pf.particles.state)
+            detected_robot = robot_list[landmark_id-1]
+            detected_robot_mean, detected_robot_covariance = calculateMeanCovFromList(detected_robot.pf.particles.state)
             # then use this mean and variance as a measurement update
             robot.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
+
+            for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
+                 if landmark_id in detected_robot.detected_landmarks_pf.keys():
+                    detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
+                    detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
+                    robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
+
 
         elif landmark_id in robot.detected_landmarks_pf.keys():
 
