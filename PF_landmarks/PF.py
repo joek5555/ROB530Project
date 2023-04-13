@@ -117,8 +117,6 @@ class particle_filter:
         new_weights = new_weights/ np.sum(new_weights)
 
         self.particles.weight = new_weights.tolist()
-        #with np.printoptions(threshold=np.inf):
-        #    print(np.sort(new_weights))
 
         #self.resampling()
         self.resampling(num_top_particles = 500)
@@ -161,13 +159,13 @@ class particle_filter:
             np.linalg.inv(prior_covariance) @ prior_mean + self.num_particles * np.linalg.inv(likelihood_covariance) @ likelihood_mean)
         posterior_covariance = np.linalg.inv(np.linalg.inv(prior_covariance) + self.num_particles * np.linalg.inv(likelihood_covariance))
         
-        print("new run")
-        print(prior_mean)
-        print(prior_covariance)
-        print(likelihood_mean)
-        print(likelihood_covariance)
-        print(posterior_mean)
-        print(posterior_covariance)
+        #print("new run")
+        #print(prior_mean)
+        #print(prior_covariance)
+        #print(likelihood_mean)
+        #print(likelihood_covariance)
+        #print(posterior_mean)
+        #print(posterior_covariance)
 
         posterior_covariance_L = np.linalg.cholesky(posterior_covariance)
 
@@ -181,7 +179,7 @@ class particle_filter:
     
 
 
-    def resampling(self, num_top_particles = None):
+    def resampling(self, num_top_particles = None, tune_variance_factor = 0):
         # low variance resampling
 
         particles_x = np.array(self.particles.state)
@@ -205,8 +203,6 @@ class particle_filter:
                 while u > W[j]:
                     j = j + 1
                 self.particles.state.append(particles_x[j, :])
-                print(particles_x[j, :])
-                print(particles_weights[j])
                 self.particles.weight.append( 1 / self.num_particles)
 
             #with np.printoptions(threshold=np.inf):
@@ -245,7 +241,12 @@ class particle_filter:
             top_particles_state = [particle.state for particle in top_particles]
             top_particles_mean, top_particles_variance = calculateMeanCovFromList(top_particles_state)
 
-            #top_particles_variance *= 5
+            if tune_variance_factor > 0:
+                diagonal = top_particles_variance.diagonal()
+                mean_variance = np.mean(diagonal)
+                #greatest_variance = np.amax(diagonal)
+                top_particles_variance = np.eye(top_particles_mean.shape[0]) * mean_variance * tune_variance_factor
+
             variance_L = np.linalg.cholesky(top_particles_variance)
 
             while len(top_particles_state) < self.num_particles:

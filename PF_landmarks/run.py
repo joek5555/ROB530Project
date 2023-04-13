@@ -142,12 +142,6 @@ while True:
             
             # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
             landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
-            print(current_landmark_mean)
-            print(current_landmark_covariance)
-            print(detected_landmark_mean)
-            print(detected_landmark_covariance)
-            print(landmark_mean)
-            print(landmark_covariance)
             robot.pf.measurement_step(z, landmark_mean, landmark_covariance)
 
         else:
