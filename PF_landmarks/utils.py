@@ -64,14 +64,14 @@ def calculateMeanCovFromList(particle_list):
 
     return particle_mean, particle_covariance
     """
-
+    """
     particle_array = np.array(particle_list)
 
     #particle_mean = np.sum(particle_array, axis=0) / particle_array.shape[0]
     particle_mean = np.mean(particle_array, axis = 0)
-    #print(particle_array)
-    #print(particle_mean)
-    #print(particle_mean.shape[0])
+    print(particle_array)
+    print(particle_mean)
+    print(particle_mean.shape[0])
 
     if particle_mean.shape[0] == 3:
         sinSum = 0
@@ -89,11 +89,30 @@ def calculateMeanCovFromList(particle_list):
 
     particle_covariance = zero_mean.T @ zero_mean / particle_array.shape[0]
     np.linalg.cholesky(particle_covariance)
-    #print("ran calculateMeanCovFromList correctly")
-    #print(particle_covariance)
+    print("ran calculateMeanCovFromList correctly")
+    print(particle_covariance)
 
     return particle_mean, particle_covariance
-
+    """
+    # to ensure mean covariance are correct, transpose array and then use code from HW5
+    particle_array = np.array(particle_list)
+    particle_array = particle_array.T
+    particle_mean = np.mean(particle_array, axis=1)
+    if particle_mean.shape[0] == 3: # only mess with heading if this is a robot pose
+        sinSum = 0
+        cosSum = 0
+        for s in range(particle_array.shape[1]):
+            cosSum += np.cos(particle_array[2,s])
+            sinSum += np.sin(particle_array[2,s])
+        particle_mean[2] = np.arctan2(sinSum, cosSum)
+    zero_mean = np.zeros_like(particle_array)
+    for s in range(particle_array.shape[1]):
+        zero_mean[:,s] = particle_array[:,s] - particle_mean
+        if particle_mean.shape[0] == 3: # only mess with heading if this is a robot pose
+            zero_mean[2,s] = wrap2Pi(zero_mean[2,s])
+    particle_covariance = zero_mean @ zero_mean.T / particle_array.shape[1]
+    
+    return particle_mean, particle_covariance
 
 
 def wrap2Pi(input):
@@ -121,7 +140,7 @@ def getLandmarkParticles(z, inv_measurement_model, measurement_covariance, robot
     
     return list_landmark_particles
 
-    
+"""    
 def plot_covariance(ax, mean, cov):
     xy = (mean[0], mean[1])
     a = cov[0, 0]
@@ -144,6 +163,42 @@ def plot_covariance(ax, mean, cov):
 
     ellipse = Ellipse(xy, width=2 * lambda_1, height=2 * lambda_2, angle=theta, fill=False, color='red')
     ax.add_patch(ellipse)
+"""
+def plot_covariance(ax, mean, covariance):
+    covariance = covariance[0:2, 0:2]
+    eigenvalues, eigenvectors = np.linalg.eig(covariance)
+    if eigenvalues[0] > eigenvalues[1]:
+        largest_eigenvalue = eigenvalues[0]
+        smallest_eigenvalue= eigenvalues[1]
+        largest_eigenvector = eigenvectors[:,0]
+        smallest_eigenvector = eigenvectors[:,1]
+    else:
+        largest_eigenvalue = eigenvalues[1]
+        smallest_eigenvalue = eigenvalues[0]
+        largest_eigenvector = eigenvectors[:,1].reshape(-1)
+        smallest_eigenvector = eigenvectors[:,0].reshape(-1)
+    # calulate angle between largest eigenvector and x_axis
+    angle = np.arctan2(largest_eigenvector[1], largest_eigenvector[0])
+    if angle < 0:
+        angle = angle + 2*np.pi
+
+    # get the 95% confidence interval error ellipse
+    chisquare_val = 2.4477
+    theta_grid = np.linspace(0,2*np.pi, 100)
+    phi = angle
+    a = chisquare_val * np.sqrt(largest_eigenvalue)
+    b = chisquare_val * np.sqrt(smallest_eigenvalue)
+    # elipse in x and y coordinates
+    ellipse_x_r  = a*np.cos( theta_grid )
+    ellipse_y_r  = b*np.sin( theta_grid )
+
+    #Define a rotation matrix
+    R = np.array([[np.cos(phi), np.sin(phi)],[ -np.sin(phi), np.cos(phi)]])
+
+    #let's rotate the ellipse to some angle phi
+    r_ellipse = np.vstack((ellipse_x_r,ellipse_y_r)).T @ R
+    ax.plot(r_ellipse[:,0] + mean[0], r_ellipse[:,1] + mean[1], c='k')
+
 
 def plot(robots, data, image_num, current_time, observed_landmark_particles=None, robot_observing = None):
 
@@ -173,17 +228,15 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
             robot_particles_y = (np.array(robot.pf.particles.state))[:,1]
             axs[i].scatter(robot_particles_x, robot_particles_y, s=1, c= robot.robot_particle_color)
             robot_mean, robot_cov = calculateMeanCovFromList(robot.pf.particles.state)
-            print(3*robot_cov)
-            plot_covariance(axs[i], robot_mean, 3*robot_cov)
+            plot_covariance(axs[i], robot_mean, robot_cov)
 
         for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
             landmark_particles_x = (np.array(landmark_pf.particles.state))[:,0]
             landmark_particles_y = (np.array(landmark_pf.particles.state))[:,1]
             axs[i].scatter(landmark_particles_x, landmark_particles_y, s=1, c=robot.measurement_particle_color)
             landmark_mean, landmark_cov = calculateMeanCovFromList(landmark_pf.particles.state)
-            # plot_covariance(axs[i], landmark_mean, landmark_cov)
-            # plot_covariance(axs[i], landmark_mean, 2*landmark_cov)
-            # plot_covariance(axs[i], landmark_mean, 3*landmark_cov)
+            plot_covariance(axs[i], landmark_mean, landmark_cov)
+
 
 
     if observed_landmark_particles is None:
@@ -197,6 +250,8 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
         observed_landmark_particles_y = (np.array(observed_landmark_particles))[:,1]
 
         axs[robot_observing - 1].scatter(observed_landmark_particles_x, observed_landmark_particles_y, s=1, c='#ed8026', marker = "x")
+        observed_landmark_mean, observed_landmark_cov = calculateMeanCovFromList(observed_landmark_particles)
+        plot_covariance(axs[robot_observing - 1], observed_landmark_mean, observed_landmark_cov)
 
         plt.savefig(path_to_images + "/image_" + str(image_num) +"_time_" + str(current_time) + "_landmark_update.png")
         plt.close()
