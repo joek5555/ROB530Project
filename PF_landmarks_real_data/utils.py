@@ -31,42 +31,75 @@ def read_data(max_runtime):
 
     data.landmark_groundtruth = np.loadtxt(landmark_groundtruth_path)
 
-
+    max_runtime +=1248200000
     robot1 = robot_data_structure()
-    robot1.groundtruth = np.loadtxt(robot1_groundtruth_path)
-    robot1.measurements = np.loadtxt(robot1_measurement_path)
-    robot1.odometry = np.loadtxt(robot1_odometry_path)
+    robot1_groundtruth_long = np.loadtxt(robot1_groundtruth_path, dtype=np.longdouble)[:,0]
+    robot1_measurements_long = np.loadtxt(robot1_measurement_path, dtype=np.longdouble)[:,0]
+    robot1_odometry_long = np.loadtxt(robot1_odometry_path, dtype=np.longdouble)[:,0]
+    robot1_groundtruth = np.loadtxt(robot1_groundtruth_path)[:,1:]
+    robot1_measurements = np.loadtxt(robot1_measurement_path)[:,1:]
+    robot1_odometry = np.loadtxt(robot1_odometry_path)[:,1:]
 
-    for i in range(robot1.groundtruth.shape[0]):
-        if robot1.groundtruth[i,0] > max_runtime:
-            robot1.groundtruth = robot1.groundtruth[0:i, :]
+    for i in range(robot1_groundtruth_long.shape[0]):
+        if robot1_groundtruth_long[i] > max_runtime:
+            robot1_groundtruth_long = robot1_groundtruth_long[0:i]
+            robot1_groundtruth = robot1_groundtruth[0:i, :]
             break
-    for i in range(robot1.measurements.shape[0]):
-        if robot1.measurements[i,0] > max_runtime:
-            robot1.measurements = robot1.measurements[0:i, :]
+    for i in range(robot1_measurements.shape[0]):
+        if robot1_measurements[i,0] > max_runtime:
+            robot1_measurements_long = robot1_measurements_long[0:i]
+            robot1_measurements = robot1_measurements[0:i, :]
             break
-    for i in range(robot1.odometry.shape[0]):
-        if robot1.odometry[i,0] > max_runtime:
-            robot1.odometry = robot1.odometry[0:i, :]
+    for i in range(robot1_odometry.shape[0]):
+        if robot1_odometry[i,0] > max_runtime:
+            robot1_odometry_long = robot1_odometry_long[0:i]
+            robot1_odometry = robot1_odometry[0:i, :]
             break
+
+    robot1.groundtruth = np.hstack([(robot1_groundtruth_long - 1248200000).reshape(-1,1), robot1_groundtruth])
+    robot1.measurements = np.hstack([(robot1_measurements_long - 1248200000).reshape(-1,1), robot1_measurements]) 
+    robot1.odometry = np.hstack([(robot1_odometry_long - 1248200000).reshape(-1,1), robot1_odometry]) 
+    #robot1.groundtruth.astype(np.float64)
+    #robot1.measurements.astype(np.float64)
+    #robot1.odometry.astype(np.float64)
 
     robot2 = robot_data_structure()
-    robot2.groundtruth = np.loadtxt(robot2_groundtruth_path)
-    robot2.measurements = np.loadtxt(robot2_measurement_path)
-    robot2.odometry = np.loadtxt(robot2_odometry_path)
+    robot2_groundtruth_long = np.loadtxt(robot2_groundtruth_path, dtype=np.longdouble)[:,0]
+    robot2_measurements_long = np.loadtxt(robot2_measurement_path, dtype=np.longdouble)[:,0]
+    robot2_odometry_long = np.loadtxt(robot2_odometry_path, dtype=np.longdouble)[:,0]
+    robot2_groundtruth = np.loadtxt(robot2_groundtruth_path)[:,1:]
+    robot2_measurements = np.loadtxt(robot2_measurement_path)[:,1:]
+    robot2_odometry = np.loadtxt(robot2_odometry_path)[:,1:]
 
-    for i in range(robot2.groundtruth.shape[0]):
-        if robot2.groundtruth[i,0] > max_runtime:
-            robot2.groundtruth = robot2.groundtruth[0:i, :]
+    for i in range(robot2_groundtruth_long.shape[0]):
+        if robot2_groundtruth_long[i] > max_runtime:
+            robot2_groundtruth_long = robot2_groundtruth_long[0:i]
+            robot2_groundtruth = robot2_groundtruth[0:i, :]
             break
-    for i in range(robot2.measurements.shape[0]):
-        if robot2.measurements[i,0] > max_runtime:
-            robot2.measurements = robot2.measurements[0:i, :]
+    for i in range(robot2_measurements.shape[0]):
+        if robot2_measurements[i,0] > max_runtime:
+            robot2_measurements_long = robot2_measurements_long[0:i]
+            robot2_measurements = robot2_measurements[0:i, :]
             break
-    for i in range(robot2.odometry.shape[0]):
-        if robot2.odometry[i,0] > max_runtime:
-            robot2.odometry = robot2.odometry[0:i, :]
+    for i in range(robot2_odometry.shape[0]):
+        if robot2_odometry[i,0] > max_runtime:
+            robot2_odometry_long = robot2_odometry_long[0:i]
+            robot2_odometry = robot2_odometry[0:i, :]
             break
+
+    robot2.groundtruth = np.hstack([(robot2_groundtruth_long - 1248200000).reshape(-1,1), robot2_groundtruth])
+    robot2.measurements = np.hstack([(robot2_measurements_long - 1248200000).reshape(-1,1), robot2_measurements]) 
+    robot2.odometry = np.hstack([(robot2_odometry_long - 1248200000).reshape(-1,1), robot2_odometry]) 
+    robot2.groundtruth.astype(np.float64)
+    robot2.measurements.astype(np.float64)
+    robot2.odometry.astype(np.float64)
+    print(robot2.groundtruth.dtype)
+    print(robot2.measurements.dtype)
+    print(robot2.odometry.dtype)
+    hi=bye
+
+
+    
 
     data.robots = [robot1, robot2]
 
