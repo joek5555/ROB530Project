@@ -22,6 +22,10 @@ def measurement_model(x,landmark):
     output[1] = wrap2Pi(np.arctan2(landmark[1] - x[1], landmark[0] - x[0]) - x[2])
     return output
 
+#def landmark_measurement_model(landmark1, landmark2):
+#    output = (landmark1 - landmark2).squeeze()
+#    return output
+
 def landmark_measurement_model(landmark1, landmark2):
     output = (landmark1 - landmark2).squeeze()
     return output

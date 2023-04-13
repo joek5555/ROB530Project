@@ -59,6 +59,7 @@ for i in range(param['num_robots']):
 image_num = 0
 
 while True:
+    print(image_num)
 
     # sort the robot list by the sorting robot function
     # this sorts the robots in acending timestep, where the timestep is the 
@@ -125,15 +126,26 @@ while True:
             detected_landmark_particles = getLandmarkParticles(z, robot.inverse_measurement_model, robot.measurement_covariance, 
                                                                robot.pf.particles.state, param['num_measurement_particles_per_robot_particle'])
             # calculate the mean and covariance of this detected landmark, then use that as a measurement update for the landmark pf
+            current_landmark_mean, current_landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
             detected_landmark_mean, detected_landmark_covariance = calculateMeanCovFromList(detected_landmark_particles)
-            robot.detected_landmarks_pf[landmark_id].measurement_step(z, detected_landmark_mean, detected_landmark_covariance)
+            
+            #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
 
             # plot the detected landmark so that we can see if measurement update was reasonable
             plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], 
                  observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id)
-
+            
+            robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
+            #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
+            #robot.detected_landmarks_pf[landmark_id].measurement_step_combine_gaussians(detected_landmark_mean, detected_landmark_covariance)
             # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
             landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
+            print(current_landmark_mean)
+            print(current_landmark_covariance)
+            print(detected_landmark_mean)
+            print(detected_landmark_covariance)
+            print(landmark_mean)
+            print(landmark_covariance)
             robot.pf.measurement_step(z, landmark_mean, landmark_covariance)
 
         else:
@@ -145,8 +157,6 @@ while True:
                                                                robot.pf.particles.state, param['num_measurement_particles_per_robot_particle'])
             # create a particle filter associated with this landmark and add it to the robot.detected_landmarks_pf list
             robot.detected_landmarks_pf[landmark_id] = particle_filter( 
-                measurement_model = models.landmark_measurement_model, 
-                measurement_covariance = np.zeros((detected_landmark_particles[0].shape[0], detected_landmark_particles[0].shape[0])), 
                 given_starting_particles = detected_landmark_particles)
 
         
