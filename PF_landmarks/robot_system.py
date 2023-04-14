@@ -32,6 +32,8 @@ class robot_system():
 
         # self.means = np.array([[]])
         self.means = None
+
+        self.groundtruth_index = None
     
 
     def get_means(self):
@@ -59,4 +61,4 @@ class robot_system():
 
 
 
-        self.groundtruth_index = None
+        
