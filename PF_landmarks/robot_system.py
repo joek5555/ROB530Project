@@ -29,3 +29,5 @@ class robot_system():
         self.measurement_particle_color = None 
 
         self.pf = None
+
+        self.alphas = None

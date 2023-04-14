@@ -10,6 +10,12 @@ def process_model(x,u):
     output[2] = x[2] + u[1] + u[2]
     return output
 
+def process_model_noise(u, alphas):
+    output = np.array([[alphas[0]*u[0]**2+alphas[1]*u[1]**2,0,0], 
+        [0,alphas[2]*u[0]**2+alphas[3]*u[1]**2,0],
+        [0,0,alphas[4]*u[0]**2+alphas[5]*u[1]**2]])
+    return output
+
 def inv_measurement_model(x,z):
     output = np.zeros(2)
     output[0] = x[0] + z[0]* np.cos(x[2] + z[1])

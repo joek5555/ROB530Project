@@ -23,7 +23,7 @@ for i in range(param['num_robots']):
     robot = robot_system()
     robot.id = i+1
     robot.process_model = models.process_model
-    robot.process_covariance = np.eye(3) * param['robot_process_covariance']
+    robot.process_covariance = models.process_model_noise
     robot.process_input_size = 3
 
     robot.measurement_model = models.measurement_model
@@ -49,6 +49,8 @@ for i in range(param['num_robots']):
         measurement_model= robot.measurement_model, measurement_covariance= robot.measurement_covariance,
         initial_state= robot.initial_state, initial_covariance= robot.initial_covariance,
         num_particles = param['num_particles_robots'])
+
+    robot.alphas = np.array(param['robot_alphas_sqrt']) * np.array(param['robot_alphas_sqrt'])
 
     robot_list.append(robot)
 
@@ -80,17 +82,18 @@ while True:
         max(robot.measurement_data[robot.measurement_index, 0], robot.check_if_reached_end_of_measurement)):
         
         # odometry timestep is sooner
-
         # calculate input u at this timestep
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
-        # perform the motion step
-        robot.pf.motion_step(u)
-        
-        # if the robot did not have a forward velocity, then we will not be able to visually see the result
-        # so do not plot
-        if(u[0] != 0):
-            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0])
-            image_num += 1
+        if(u[0] != 0 or u[1] != 0):
+            
+            # perform the motion step
+            robot.pf.motion_step(u, robot.alphas)
+            
+            # if the robot did not have a forward velocity, then we will not be able to visually see the result
+            # so do not plot
+            if(u[0] != 0):
+                plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0])
+                image_num += 1
 
         robot.odometry_index += 1
         # if index is past the end of the data, set the check_if_reached_end_of_odometry
