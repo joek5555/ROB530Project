@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 from robot_system import robot_system
 import models
-from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot
+from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths
 from PF import particle_filter
 
 # settings.yaml contains many of the parameters to be tuned
@@ -40,6 +40,8 @@ for i in range(param['num_robots']):
     robot.check_if_reached_end_of_odometry = 0
     robot.measurement_index = 0
     robot.check_if_reached_end_of_measurement = 0
+
+    robot.means = np.array([robot.initial_state])
 
     robot.robot_particle_color = param['robot_particle_color'][i]
     robot.measurement_particle_color = param['measurement_particle_color'][i]
@@ -174,4 +176,9 @@ while True:
             robot.check_if_reached_end_of_measurement = param['max_runtime']
             robot.measurement_index = 0 # no longer use measurement index, ensures it is not out of scope of data
 
+    # Keep track of the estimate
+    robot.log_mean()
+
+
+plot_robot_paths(data, robot_list)
         

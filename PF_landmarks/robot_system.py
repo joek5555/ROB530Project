@@ -29,3 +29,29 @@ class robot_system():
         self.measurement_particle_color = None 
 
         self.pf = None
+
+        self.means = None
+
+
+    def get_means(self):
+        return self.means
+
+
+    def log_mean(self):
+        mean = self._get_mean()
+        added_mean = np.array([mean])
+        self.means = np.append(self.means, added_mean, axis=0)
+
+
+    def _get_mean(self):
+        """
+        Computes the mean pose of the robot based on the particles.
+        
+        Returns a numpy array of size 3 with [x, y, bearing]
+        """
+        particles = np.array(self.pf.particles.state)
+        weights = np.array(self.pf.particles.weight)
+
+        # mean = np.average(particles, axis=0, weights=weights)
+        mean = np.average(particles, axis=0)
+        return mean

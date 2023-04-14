@@ -308,3 +308,27 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
         plt.savefig(path_to_images + "/image_" + str(image_num) + "_" + label +"_time_" + str(round(current_time,2)) + ".png")
         plt.close()
         
+
+def plot_robot_paths(data, robot_list):
+    """Plot mean vs. groundtruth data."""
+    for i in range(len(robot_list)):
+        # Plot groundtruth
+        groundtruth = data.robots[i].groundtruth
+        groundtruth_x = np.array(groundtruth[:, 1])
+        groundtruth_y = np.array(groundtruth[:, 2])
+
+        plt.plot(groundtruth_x, groundtruth_y, '-b')
+
+        # Plot estimates
+        means = robot_list[i].get_means()
+        mean_x = means[:, 0]
+        mean_y = means[:, 1]
+
+        plt.plot(mean_x, mean_y, '-r')
+
+        # Format and save figure
+        plt.title(f'Path of Robot {i+1}')
+        plt.legend(['Groundtruth', 'Estimate'])
+
+        plt.savefig(f'PF_landmarks_real_data/saved_images/robot_{i+1}_path.png')
+        plt.close()
