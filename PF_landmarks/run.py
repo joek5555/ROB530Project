@@ -52,6 +52,8 @@ for i in range(param['num_robots']):
         measurement_model= robot.measurement_model, measurement_covariance= robot.measurement_covariance,
         initial_state= robot.initial_state, initial_covariance= robot.initial_covariance,
         num_particles = param['num_particles_robots'])
+    
+    robot.groundtruth_index = 0
 
     robot_list.append(robot)
 
@@ -83,6 +85,12 @@ while True:
         
         # odometry timestep is sooner
 
+        indices = data.robots[robot.id-1].groundtruth[robot.groundtruth_index:,0] > robot.odometry_data[robot.odometry_index, 0]
+        all_greater = data.robots[robot.id-1].groundtruth[robot.groundtruth_index:,:]
+        all_greater = all_greater[indices, :]
+        groundtruth = all_greater[0,:]     
+        robot.groundtruth_index += 1 + np.where(indices)[0][0]
+
         # calculate input u at this timestep
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
         # perform the motion step
@@ -91,7 +99,7 @@ while True:
         # if the robot did not have a forward velocity, then we will not be able to visually see the result
         # so do not plot
         if(u[0] != 0):
-            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0])
+            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0],robot_observing=robot.id, groundtruth_point = groundtruth)
             image_num += 1
 
         robot.odometry_index += 1
@@ -104,8 +112,13 @@ while True:
         
 
     else:
-          
+        
         # measurement timestep is sooner
+
+        # assume that since odometry comes in faster than measurements, the groundtruth for the last odometry 
+        # time is close enough to this measurement time
+        groundtruth = data.robots[robot.id-1].groundtruth[robot.groundtruth_index-1,:]
+
 
         # get measurement z at current timestep
         z = np.array([robot.measurement_data[robot.measurement_index, 2], robot.measurement_data[robot.measurement_index, 3]])
@@ -143,7 +156,7 @@ while True:
 
             # plot the detected landmark so that we can see if measurement update was reasonable
             plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], 
-                 observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id)
+                 observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
             
             #update the landmark's particle filter
             robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
@@ -166,7 +179,7 @@ while True:
                 given_starting_particles = detected_landmark_particles)
         
         # plot the measurement step
-        plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0])
+        plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0],robot_observing=robot.id, groundtruth_point = groundtruth)
         image_num += 1
 
         robot.measurement_index += 1

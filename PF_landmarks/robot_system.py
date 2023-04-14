@@ -57,3 +57,6 @@ class robot_system():
         mean = np.average(particles, axis=0)
         return mean
 
+
+
+        self.groundtruth_index = None

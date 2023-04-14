@@ -200,7 +200,7 @@ def plot_covariance(ax, mean, covariance):
     ax.plot(r_ellipse[:,0] + mean[0], r_ellipse[:,1] + mean[1], c='k')
 
 
-def plot(robots, data, image_num, current_time, observed_landmark_particles=None, robot_observing = None):
+def plot(robots, data, image_num, current_time, observed_landmark_particles=None, robot_observing = None, groundtruth_point = None):
 
     path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
     if os.path.exists(path_to_images) == False:
@@ -237,7 +237,8 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
             landmark_mean, landmark_cov = calculateMeanCovFromList(landmark_pf.particles.state)
             plot_covariance(axs[i], landmark_mean, landmark_cov)
 
-
+    if groundtruth_point is not None:
+        axs[robot_observing - 1].scatter(groundtruth_point[1], groundtruth_point[2], marker = "x")
 
     if observed_landmark_particles is None:
 
