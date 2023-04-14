@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 from robot_system import robot_system
 import models
-from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot
+from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths
 from PF import particle_filter
 
 # settings.yaml contains many of the parameters to be tuned
@@ -41,6 +41,9 @@ for i in range(param['num_robots']):
     robot.measurement_index = 0
     robot.check_if_reached_end_of_measurement = 0
 
+    robot.means = np.array([robot.initial_state])
+
+
     robot.robot_particle_color = param['robot_particle_color'][i]
     robot.measurement_particle_color = param['measurement_particle_color'][i]
 
@@ -52,14 +55,13 @@ for i in range(param['num_robots']):
 
     robot_list.append(robot)
 
-
 # main loop where we either perform a motion_step or measurement step based on 
 # the odometry or measurement data that occurs next 
 
 image_num = 0
 
 while True:
-    print(image_num)
+    # print(image_num)
 
     # sort the robot list by the sorting robot function
     # this sorts the robots in acending timestep, where the timestep is the 
@@ -162,7 +164,6 @@ while True:
             # create a particle filter associated with this landmark and add it to the robot.detected_landmarks_pf list
             robot.detected_landmarks_pf[landmark_id] = particle_filter( 
                 given_starting_particles = detected_landmark_particles)
-
         
         # plot the measurement step
         plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0])
@@ -174,4 +175,9 @@ while True:
             robot.check_if_reached_end_of_measurement = param['max_runtime']
             robot.measurement_index = 0 # no longer use measurement index, ensures it is not out of scope of data
 
-        
+
+    # Keep track of the estimate
+    robot.log_mean()
+    
+
+plot_robot_paths(data, robot_list)
