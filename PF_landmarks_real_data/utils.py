@@ -22,16 +22,16 @@ def read_data(max_runtime):
 
     landmark_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Landmark_Groundtruth.dat'))
     robot1_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot1_Groundtruth.dat'))
-    robot1_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot1_Measurement.dat'))
+    robot1_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot1_Measurement_x.dat'))
     robot1_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot1_Odometry.dat'))
 
     robot2_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Groundtruth.dat'))
-    robot2_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Measurement.dat'))
+    robot2_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Measurement_x.dat'))
     robot2_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Odometry.dat'))
 
     data.landmark_groundtruth = np.loadtxt(landmark_groundtruth_path)
 
-    max_runtime +=1248200000
+    max_runtime +=1248270000
     robot1 = robot_data_structure()
     robot1_groundtruth_long = np.loadtxt(robot1_groundtruth_path, dtype=np.longdouble)[:,0]
     robot1_measurements_long = np.loadtxt(robot1_measurement_path, dtype=np.longdouble)[:,0]
@@ -46,22 +46,19 @@ def read_data(max_runtime):
             robot1_groundtruth = robot1_groundtruth[0:i, :]
             break
     for i in range(robot1_measurements.shape[0]):
-        if robot1_measurements[i,0] > max_runtime:
+        if robot1_measurements_long[i] > max_runtime:
             robot1_measurements_long = robot1_measurements_long[0:i]
             robot1_measurements = robot1_measurements[0:i, :]
             break
     for i in range(robot1_odometry.shape[0]):
-        if robot1_odometry[i,0] > max_runtime:
+        if robot1_odometry_long[i] > max_runtime:
             robot1_odometry_long = robot1_odometry_long[0:i]
             robot1_odometry = robot1_odometry[0:i, :]
             break
 
-    robot1.groundtruth = np.hstack([(robot1_groundtruth_long - 1248200000).reshape(-1,1), robot1_groundtruth])
-    robot1.measurements = np.hstack([(robot1_measurements_long - 1248200000).reshape(-1,1), robot1_measurements]) 
-    robot1.odometry = np.hstack([(robot1_odometry_long - 1248200000).reshape(-1,1), robot1_odometry]) 
-    #robot1.groundtruth.astype(np.float64)
-    #robot1.measurements.astype(np.float64)
-    #robot1.odometry.astype(np.float64)
+    robot1.groundtruth = np.hstack([(robot1_groundtruth_long - 1248270000).reshape(-1,1), robot1_groundtruth]).astype(np.float64)
+    robot1.measurements = np.hstack([(robot1_measurements_long - 1248270000).reshape(-1,1), robot1_measurements]).astype(np.float64) 
+    robot1.odometry = np.hstack([(robot1_odometry_long - 1248270000).reshape(-1,1), robot1_odometry]).astype(np.float64) 
 
     robot2 = robot_data_structure()
     robot2_groundtruth_long = np.loadtxt(robot2_groundtruth_path, dtype=np.longdouble)[:,0]
@@ -77,26 +74,19 @@ def read_data(max_runtime):
             robot2_groundtruth = robot2_groundtruth[0:i, :]
             break
     for i in range(robot2_measurements.shape[0]):
-        if robot2_measurements[i,0] > max_runtime:
+        if robot2_measurements_long[i] > max_runtime:
             robot2_measurements_long = robot2_measurements_long[0:i]
             robot2_measurements = robot2_measurements[0:i, :]
             break
     for i in range(robot2_odometry.shape[0]):
-        if robot2_odometry[i,0] > max_runtime:
+        if robot2_odometry_long[i] > max_runtime:
             robot2_odometry_long = robot2_odometry_long[0:i]
             robot2_odometry = robot2_odometry[0:i, :]
             break
 
-    robot2.groundtruth = np.hstack([(robot2_groundtruth_long - 1248200000).reshape(-1,1), robot2_groundtruth])
-    robot2.measurements = np.hstack([(robot2_measurements_long - 1248200000).reshape(-1,1), robot2_measurements]) 
-    robot2.odometry = np.hstack([(robot2_odometry_long - 1248200000).reshape(-1,1), robot2_odometry]) 
-    robot2.groundtruth.astype(np.float64)
-    robot2.measurements.astype(np.float64)
-    robot2.odometry.astype(np.float64)
-    print(robot2.groundtruth.dtype)
-    print(robot2.measurements.dtype)
-    print(robot2.odometry.dtype)
-    hi=bye
+    robot2.groundtruth = np.hstack([(robot2_groundtruth_long - 1248270000).reshape(-1,1), robot2_groundtruth]).astype(np.float64)
+    robot2.measurements = np.hstack([(robot2_measurements_long - 1248270000).reshape(-1,1), robot2_measurements]).astype(np.float64)
+    robot2.odometry = np.hstack([(robot2_odometry_long - 1248270000).reshape(-1,1), robot2_odometry]).astype(np.float64) 
 
 
     
@@ -259,7 +249,7 @@ def plot_covariance(ax, mean, covariance):
     ax.plot(r_ellipse[:,0] + mean[0], r_ellipse[:,1] + mean[1], c='k')
 
 
-def plot(robots, data, image_num, current_time, observed_landmark_particles=None, robot_observing = None):
+def plot(robots, data, image_num, current_time, label, observed_landmark_particles=None, robot_observing = None):
 
     path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
     if os.path.exists(path_to_images) == False:
@@ -303,7 +293,7 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
         axs[0].set_ylim([-3.5,-2.5])
         axs[1].set_xlim([0.5,1])
         axs[1].set_ylim([-1.5,-1])
-        plt.savefig(path_to_images + "/image_" + str(image_num) +"_time_" + str(current_time) + "_result.png")
+        plt.savefig(path_to_images + "/image_" + str(image_num) + "_"  + label +"_time_" + str(round(current_time, 2)) + ".png")
         plt.close()
 
     else:
@@ -315,6 +305,6 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
         observed_landmark_mean, observed_landmark_cov = calculateMeanCovFromList(observed_landmark_particles)
         plot_covariance(axs[robot_observing - 1], observed_landmark_mean, observed_landmark_cov)
 
-        plt.savefig(path_to_images + "/image_" + str(image_num) +"_time_" + str(current_time) + "_landmark_update.png")
+        plt.savefig(path_to_images + "/image_" + str(image_num) + "_" + label +"_time_" + str(round(current_time,2)) + ".png")
         plt.close()
         

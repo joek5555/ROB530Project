@@ -88,14 +88,14 @@ while True:
             dt = robot.odometry_data[robot.odometry_index+1, 0] - robot.odometry_data[robot.odometry_index, 0]
         else:
             dt = robot.odometry_data[robot.odometry_index, 0] - robot.odometry_data[robot.odometry_index - 1, 0]
-
-        print(dt)
+           
         robot.pf.motion_step(u, dt)
         
         # if the robot did not have a forward velocity, then we will not be able to visually see the result
         # so do not plot
         if(u[0] != 0):
-            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0])
+            label = "R" + str(robot.id) + "_motion"
+            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0], label)
             image_num += 1
 
         robot.odometry_index += 1
@@ -146,7 +146,8 @@ while True:
             #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
 
             # plot the detected landmark so that we can see if measurement update was reasonable
-            plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], 
+            label = "R" + str(robot.id) + "_land_update"
+            plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
                  observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id)
             
             #update the landmark's particle filter
@@ -171,7 +172,8 @@ while True:
 
         
         # plot the measurement step
-        plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0])
+        label = "R" + str(robot.id) + "measure"
+        plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label)
         image_num += 1
 
         robot.measurement_index += 1
