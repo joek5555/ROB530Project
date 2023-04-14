@@ -23,7 +23,7 @@ for i in range(param['num_robots']):
     robot = robot_system()
     robot.id = i+1
     robot.process_model = models.process_model
-    robot.process_covariance = np.eye(3) * param['robot_process_covariance']
+    robot.process_covariance = models.process_model_noise
     robot.process_input_size = 3
 
     robot.measurement_model = models.measurement_model
@@ -49,6 +49,8 @@ for i in range(param['num_robots']):
         measurement_model= robot.measurement_model, measurement_covariance= robot.measurement_covariance,
         initial_state= robot.initial_state, initial_covariance= robot.initial_covariance,
         num_particles = param['num_particles_robots'])
+
+    robot.alphas = np.array(param['robot_alphas_sqrt']) * np.array(param['robot_alphas_sqrt'])
 
     robot_list.append(robot)
 
@@ -83,20 +85,21 @@ while True:
 
         # calculate input u at this timestep
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
-        # perform the motion step
-        if robot.odometry_index == 0:
-            dt = robot.odometry_data[robot.odometry_index+1, 0] - robot.odometry_data[robot.odometry_index, 0]
-        else:
-            dt = robot.odometry_data[robot.odometry_index, 0] - robot.odometry_data[robot.odometry_index - 1, 0]
-           
-        robot.pf.motion_step(u, dt)
-        
-        # if the robot did not have a forward velocity, then we will not be able to visually see the result
-        # so do not plot
-        if(u[0] != 0):
-            label = "R" + str(robot.id) + "_motion"
-            plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0], label)
-            image_num += 1
+        if(u[0] != 0 or u[1] != 0):
+            # perform the motion step
+            if robot.odometry_index == 0:
+                dt = robot.odometry_data[robot.odometry_index+1, 0] - robot.odometry_data[robot.odometry_index, 0]
+            else:
+                dt = robot.odometry_data[robot.odometry_index, 0] - robot.odometry_data[robot.odometry_index - 1, 0]
+            
+            robot.pf.motion_step(u, dt, robot.alphas)
+            
+            # if the robot did not have a forward velocity, then we will not be able to visually see the result
+            # so do not plot
+            if(u[0] != 0 and robot.id == 1):
+                label = "motion"
+                plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0], label)
+                image_num += 1
 
         robot.odometry_index += 1
         # if index is past the end of the data, set the check_if_reached_end_of_odometry
@@ -108,7 +111,7 @@ while True:
         
 
     else:
-          
+         
         # measurement timestep is sooner
 
         # get measurement z at current timestep
@@ -116,8 +119,9 @@ while True:
         landmark_id = int(robot.measurement_data[robot.measurement_index, 1])
 
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
-        if landmark_id <= param['num_robots']:
-            
+        if landmark_id <= param['num_robots'] or landmark_id == 3 or landmark_id == 4 or landmark_id == 5:
+            pass
+            """
             # if you detect another robot
             # 'communicate' with the robot and get the mean and covariance associated with its location
             detected_robot = robot_list[landmark_id-1]
@@ -130,7 +134,7 @@ while True:
                     detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
                     detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
                     robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
-
+            """
 
         elif landmark_id in robot.detected_landmarks_pf.keys():
 
@@ -175,7 +179,7 @@ while True:
         label = "R" + str(robot.id) + "measure"
         plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label)
         image_num += 1
-
+        
         robot.measurement_index += 1
         # if index is past the end of the data, set the check_if_reached_end_of_measurement
         if robot.measurement_index >= robot.measurement_data.shape[0]:

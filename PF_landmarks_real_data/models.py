@@ -2,6 +2,12 @@ import numpy as np
 from utils import wrap2Pi
 
 
+def process_model_noise(u, alphas):
+    output = np.array([[alphas[0]*u[0]**2+alphas[1]*u[1]**2,0,0], 
+        [0,alphas[2]*u[0]**2+alphas[3]*u[1]**2,0],
+        [0,0,alphas[4]*u[0]**2+alphas[5]*u[1]**2]])
+    return output
+
 def process_model(x,u, dt):
 
     output = np.zeros(3)

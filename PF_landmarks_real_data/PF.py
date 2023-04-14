@@ -25,10 +25,7 @@ class particle_filter:
 
         self.process_model = process_model
         self.process_covariance = process_covariance
-        if self.process_covariance is not None:
-            self.process_covariance_L = np.linalg.cholesky(self.process_covariance)
-        else:
-            self.process_covariance_L = None
+
         self.process_input_size = process_input_size
 
         self.measurement_model = measurement_model
@@ -56,13 +53,15 @@ class particle_filter:
         
 
 
-    def motion_step(self, u, dt):
+    def motion_step(self, u, dt, alphas):
 
         if self.process_input_size is not None and self.process_covariance is not None and self.process_model is not None:
 
             for i in range(self.num_particles):
                 # generate noise to apply to the input
-                sample_input_noise = self.process_covariance_L @ np.random.randn(self.process_input_size,1)
+                process_covariance = self.process_covariance(u, alphas)
+                process_covariance_L = np.linalg.cholesky(process_covariance)
+                sample_input_noise = process_covariance_L @ np.random.randn(self.process_input_size,1)
 
                 self.particles.state[i] = self.process_model(self.particles.state[i], u + sample_input_noise.squeeze(), dt)
                 #self.particles.state[i] = self.process_model(self.particles.state[i], u)
