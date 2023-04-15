@@ -27,7 +27,7 @@ for i in range(param['num_robots']):
     robot.process_input_size = 3
 
     robot.measurement_model = models.measurement_model
-    robot.measurement_covariance = np.eye(2) * param['robot_measurement_covariance']
+    robot.measurement_covariance = np.array([[param['robot_measurement_range_covariance'],0],[0, param['robot_measurement_bearing_covariance']]])
     robot.inverse_measurement_model = models.inv_measurement_model
 
     robot.initial_state = data.robots[i].groundtruth[0, 1:]
@@ -61,6 +61,9 @@ for i in range(param['num_robots']):
 # the odometry or measurement data that occurs next 
 
 image_num = 0
+# decide if you want to plot the measurement and motion step for each robot
+plot_motion_step = [True, True]
+plot_measurement_step = [True, True]
 
 while True:
     print(image_num)
@@ -104,10 +107,12 @@ while True:
             
             # if the robot did not have a forward velocity, then we will not be able to visually see the result
             # so do not plot
-            if(u[0] != 0 and robot.id == 1):
+            
+            if(u[0] != 0 and plot_motion_step[robot.id-1]):
                 label = "motion"
                 plot(robot_list, data, image_num, robot.odometry_data[robot.odometry_index, 0], label, robot_observing=robot.id, groundtruth_point = groundtruth)
                 image_num += 1
+            
 
         robot.odometry_index += 1
         # if index is past the end of the data, set the check_if_reached_end_of_odometry
@@ -147,7 +152,7 @@ while True:
                     detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
                     robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
             """
-
+        
         elif landmark_id in robot.detected_landmarks_pf.keys():
 
             # if you detect a landmark you have detected before
@@ -162,18 +167,25 @@ while True:
             #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
 
             # plot the detected landmark so that we can see if measurement update was reasonable
-            label = "R" + str(robot.id) + "_land_update"
-            plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
-                 observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
-            
+            if plot_measurement_step[robot.id-1]:
+                label = "R" + str(robot.id) + "_land_update"
+                plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
+                    observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
+                
             #update the landmark's particle filter
             robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
             #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
             #robot.detected_landmarks_pf[landmark_id].measurement_step_combine_gaussians(detected_landmark_mean, detected_landmark_covariance)
             
+            if plot_measurement_step[robot.id-1]:
+                label = "R" + str(robot.id) + "_land_updated"
+                plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
+                    observed_landmark_particles = [np.array([0,0])], robot_observing = robot.id, groundtruth_point = groundtruth)
+                
             # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
             landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
             robot.pf.measurement_step(z, landmark_mean, landmark_covariance)
+
 
         else:
              
@@ -188,9 +200,10 @@ while True:
 
         
         # plot the measurement step
-        label = "R" + str(robot.id) + "measure"
-        plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label, robot_observing=robot.id, groundtruth_point = groundtruth)
-        image_num += 1
+        if plot_measurement_step[robot.id-1]:
+            label = "R" + str(robot.id) + "measure"
+            plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label, robot_observing=robot.id, groundtruth_point = groundtruth)
+            image_num += 1
         
         robot.measurement_index += 1
         # if index is past the end of the data, set the check_if_reached_end_of_measurement

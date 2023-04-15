@@ -42,8 +42,8 @@ def read_data(max_runtime):
 
     for i in range(robot1_groundtruth_long.shape[0]):
         if robot1_groundtruth_long[i] > max_runtime:
-            robot1_groundtruth_long = robot1_groundtruth_long[0:i]
-            robot1_groundtruth = robot1_groundtruth[0:i, :]
+            robot1_groundtruth_long = robot1_groundtruth_long[0:i+1]
+            robot1_groundtruth = robot1_groundtruth[0:i+1, :]
             break
     for i in range(robot1_measurements.shape[0]):
         if robot1_measurements_long[i] > max_runtime:
@@ -70,8 +70,8 @@ def read_data(max_runtime):
 
     for i in range(robot2_groundtruth_long.shape[0]):
         if robot2_groundtruth_long[i] > max_runtime:
-            robot2_groundtruth_long = robot2_groundtruth_long[0:i]
-            robot2_groundtruth = robot2_groundtruth[0:i, :]
+            robot2_groundtruth_long = robot2_groundtruth_long[0:i+1]
+            robot2_groundtruth = robot2_groundtruth[0:i+1, :]
             break
     for i in range(robot2_measurements.shape[0]):
         if robot2_measurements_long[i] > max_runtime:
@@ -287,13 +287,13 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
             plot_covariance(axs[i], landmark_mean, landmark_cov)
 
     if groundtruth_point is not None:
-        axs[robot_observing - 1].scatter(groundtruth_point[1], groundtruth_point[2],s = 100, c='#6b6666', marker = "x")
+        axs[robot_observing - 1].scatter(groundtruth_point[1], groundtruth_point[2],s = 200, c='#6b6666', marker = "x")
 
     if observed_landmark_particles is None:
-        axs[0].set_xlim([3,4])
-        axs[0].set_ylim([-3.5,-2.5])
-        axs[1].set_xlim([0.5,1])
-        axs[1].set_ylim([-1.5,-1])
+        axs[0].set_xlim([2.5,3.8])
+        axs[0].set_ylim([-3.5,-2.2])
+        axs[1].set_xlim([0.5,1.5])
+        axs[1].set_ylim([-1.5,-0.5])
         plt.savefig(path_to_images + "/image_" + str(image_num) + "_"  + label +"_time_" + str(round(current_time, 2)) + ".png")
         plt.close()
 

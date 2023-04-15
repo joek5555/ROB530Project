@@ -4,14 +4,17 @@ num_robots: 2
 
 num_particles_robots: 100
 num_measurement_particles_per_robot_particle: 10
-max_runtime: 2287.0
+max_runtime: 2287.0 # starting time is 2272.8 for robot 1
 
-robot_process_covariance: 0.001
-robot_measurement_covariance: 0.0001
+#robot_measurement_range_covariance: 0.05 # 95% of points will fall within +-.44m from true value
+robot_measurement_range_covariance: 0.0001 # 95% of points will fall within +-.02m from true value
+#robot_measurement_bearing_covariance: 0.0072 # 95% of points will fall within +- 10 degrees from true value
+robot_measurement_bearing_covariance: 0.1 # 95% of points will fall within +- 35 degrees from true value
 robot_initial_covariance: 0.0001
 
 #robot_alphas_sqrt: [0.0025, 0.0005, 0.0025, 0.0005, 0.0025, 0.0005] # suggested by HW5
-robot_alphas_sqrt: [0.05, 0.005, 0.05, 0.005, 0.05, 0.005] # worked well for test data
+#robot_alphas_sqrt: [0.05, 0.005, 0.05, 0.005, 0.05, 0.005] # worked well for test data
+robot_alphas_sqrt: [1.2, 0.2, 1.2, 0.2, 1.2, 0.2]
 
 robot_particle_color:
   - '#660c05'

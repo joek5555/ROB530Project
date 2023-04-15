@@ -118,7 +118,7 @@ class particle_filter:
         self.particles.weight = new_weights.tolist()
 
         #self.resampling()
-        self.resampling(num_top_particles = 500)
+        self.resampling(num_top_particles = 500, tune_variance_factor=2)
 
 
 
