@@ -31,3 +31,5 @@ class robot_system():
         self.pf = None
 
         self.alphas = None
+
+        self.groundtruth_index = None
