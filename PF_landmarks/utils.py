@@ -258,8 +258,8 @@ def plot(robots, data, image_num, current_time, observed_landmark_particles=None
         plt.close()
 
 
-def plot_robot_paths(data, robot_list):
-    """Plot mean vs. groundtruth data."""
+def plot_robot_paths_and_error(data, robot_list):
+    """Plot mean vs. groundtruth data as well as error."""
     for i in range(len(robot_list)):
         # Plot groundtruth
         groundtruth = data.robots[i].groundtruth
@@ -270,8 +270,8 @@ def plot_robot_paths(data, robot_list):
 
         # Plot estimates
         means = robot_list[i].get_means()
-        mean_x = means[:, 0]
-        mean_y = means[:, 1]
+        mean_x = means[:, 1]
+        mean_y = means[:, 2]
 
         plt.plot(mean_x, mean_y, '-r')
 
@@ -282,4 +282,34 @@ def plot_robot_paths(data, robot_list):
 
         plt.savefig(f'PF_landmarks/saved_images/robot_{i+1}_path.png')
         plt.close()
-        
+
+        plot_robot_error(i, means, groundtruth)
+
+
+def plot_robot_error(robot_id, means, groundtruth):
+    """Plot error of robot estimates."""
+    groundtruth_idx = 0
+    errors = np.array([0])
+
+    for mean in means:
+        # Find the groundtruth closest to the mean's timestamp (without excedding)
+        while groundtruth_idx < len(groundtruth) - 1 and groundtruth[groundtruth_idx + 1, 0] <= mean[0]:
+            groundtruth_idx += 1
+
+        # Calculate error
+        error = np.linalg.norm(mean[1:3] - groundtruth[groundtruth_idx, 1:3])
+        errors = np.append(errors, error)
+
+        print(mean[0:3])
+        print(groundtruth[groundtruth_idx, 0:3])
+        print()
+
+    print()
+    print()
+    print()
+    # Format and save figure
+    plt.plot(means[:, 0], errors[1:])
+    plt.title(f'Robot {robot_id + 1} Error in Estimate')
+
+    plt.savefig(f'PF_landmarks/saved_images/robot_{robot_id + 1}_error.png')
+    plt.close()

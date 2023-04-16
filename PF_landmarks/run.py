@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 from robot_system import robot_system
 import models
-from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths
+from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths_and_error
 from PF import particle_filter
 
 # settings.yaml contains many of the parameters to be tuned
@@ -41,7 +41,9 @@ for i in range(param['num_robots']):
     robot.measurement_index = 0
     robot.check_if_reached_end_of_measurement = 0
 
-    robot.means = np.array([robot.initial_state])
+    timestamped_mean = robot.initial_state
+    timestamped_mean = np.insert(timestamped_mean, 0, 0)
+    robot.means = np.array([timestamped_mean])
 
 
     robot.robot_particle_color = param['robot_particle_color'][i]
@@ -95,6 +97,8 @@ while True:
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
         # perform the motion step
         robot.pf.motion_step(u)
+
+        timestamp = robot.odometry_data[robot.odometry_index, 0]
         
         # if the robot did not have a forward velocity, then we will not be able to visually see the result
         # so do not plot
@@ -123,6 +127,7 @@ while True:
         # get measurement z at current timestep
         z = np.array([robot.measurement_data[robot.measurement_index, 2], robot.measurement_data[robot.measurement_index, 3]])
         landmark_id = int(robot.measurement_data[robot.measurement_index, 1])
+        timestamp = robot.measurement_data[robot.measurement_index, 0]
 
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
         if landmark_id <= param['num_robots']:
@@ -190,7 +195,7 @@ while True:
 
 
     # Keep track of the estimate
-    robot.log_mean()
+    robot.log_mean(timestamp)
     
 
-plot_robot_paths(data, robot_list)
+plot_robot_paths_and_error(data, robot_list)

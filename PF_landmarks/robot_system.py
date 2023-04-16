@@ -40,8 +40,9 @@ class robot_system():
         return self.means
 
 
-    def log_mean(self):
+    def log_mean(self, timestamp):
         mean = self._get_mean()
+        mean = np.insert(mean, 0, timestamp)
         added_mean = np.array([mean])
         self.means = np.append(self.means, added_mean, axis=0)
 
