@@ -3,7 +3,7 @@ import numpy as np
 import yaml
 from robot_system import robot_system
 import models
-from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot
+from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths_and_error
 from PF import particle_filter
 
 # settings.yaml contains many of the parameters to be tuned
@@ -40,6 +40,10 @@ for i in range(param['num_robots']):
     robot.check_if_reached_end_of_odometry = 0
     robot.measurement_index = 0
     robot.check_if_reached_end_of_measurement = 0
+
+    timestamped_mean = robot.initial_state
+    timestamped_mean = np.insert(timestamped_mean, 0, data.robots[i].groundtruth[0, 0])
+    robot.means = np.array([timestamped_mean])
 
     robot.robot_particle_color = param['robot_particle_color'][i]
     robot.measurement_particle_color = param['measurement_particle_color'][i]
@@ -91,8 +95,12 @@ while True:
         indices = data.robots[robot.id-1].groundtruth[robot.groundtruth_index:,0] > robot.odometry_data[robot.odometry_index, 0]
         all_greater = data.robots[robot.id-1].groundtruth[robot.groundtruth_index:,:]
         all_greater = all_greater[indices, :]
+        if len(all_greater) == 0:
+            break
         groundtruth = all_greater[0,:]     
         robot.groundtruth_index += 1 + np.where(indices)[0][0]
+
+        timestamp = robot.odometry_data[robot.odometry_index, 0]
 
         # calculate input u at this timestep
         u = np.array([robot.odometry_data[robot.odometry_index, 1], robot.odometry_data[robot.odometry_index, 2], 0.0])
@@ -134,6 +142,7 @@ while True:
         # get measurement z at current timestep
         z = np.array([robot.measurement_data[robot.measurement_index, 2], robot.measurement_data[robot.measurement_index, 3]])
         landmark_id = int(robot.measurement_data[robot.measurement_index, 1])
+        timestamp = robot.measurement_data[robot.measurement_index, 0]
 
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
         if landmark_id <= param['num_robots'] or landmark_id == 3 or landmark_id == 4 or landmark_id == 5:
@@ -212,3 +221,8 @@ while True:
             robot.measurement_index = 0 # no longer use measurement index, ensures it is not out of scope of data
 
         
+    # Keep track of the estimate
+    robot.log_mean(timestamp)
+    
+
+plot_robot_paths_and_error(data, robot_list)

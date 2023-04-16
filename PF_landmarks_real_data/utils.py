@@ -308,4 +308,68 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
 
         plt.savefig(path_to_images + "/image_" + str(image_num) + "_" + label +"_time_" + str(round(current_time,2)) + ".png")
         plt.close()
-        
+
+
+def get_path_to_saved_images():
+    path_to_images = os.path.realpath(os.path.join(os.path.dirname(__file__), 'saved_images'))
+
+    if not os.path.exists(path_to_images):
+       os.mkdir(path_to_images)
+
+    return path_to_images
+
+
+def plot_robot_paths_and_error(data, robot_list):
+    """Plot mean vs. groundtruth data as well as error."""
+    for i in range(len(robot_list)):
+        # Plot groundtruth
+        groundtruth = data.robots[i].groundtruth
+        groundtruth_x = np.array(groundtruth[:, 1])
+        groundtruth_y = np.array(groundtruth[:, 2])
+
+        plt.plot(groundtruth_x, groundtruth_y, '-b')
+
+        # Plot estimates
+        means = robot_list[i].get_means()
+        mean_x = means[:, 1]
+        mean_y = means[:, 2]
+
+        plt.plot(mean_x, mean_y, '-r')
+
+        # Format and save figure
+        plt.title(f'Path of Robot {i+1}')
+        plt.legend(['Groundtruth', 'Estimate'])
+        plt.axis('equal')
+
+        image_path = get_path_to_saved_images()
+
+        plt.savefig(f'{image_path}/robot_{i+1}_path.png')
+        plt.close()
+
+        plot_robot_error(i, means, groundtruth)
+
+
+def plot_robot_error(robot_id, means, groundtruth):
+    """Plot error of robot estimates."""
+    groundtruth_idx = 0
+    errors = np.array([0])
+
+    for mean in means:
+        # Find the groundtruth closest to the mean's timestamp (without excedding)
+        while groundtruth_idx < len(groundtruth) - 1 and groundtruth[groundtruth_idx + 1, 0] <= mean[0]:
+            groundtruth_idx += 1
+
+        # Calculate error
+        error = np.linalg.norm(mean[1:3] - groundtruth[groundtruth_idx, 1:3])
+        errors = np.append(errors, error)
+
+    # Format and save figure
+    plt.plot(means[:, 0], errors[1:])
+    plt.title(f'Robot {robot_id + 1} Error in Estimate')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Error (m)')
+
+    image_path = get_path_to_saved_images()
+
+    plt.savefig(f'{image_path}/robot_{robot_id + 1}_error.png')
+    plt.close()
