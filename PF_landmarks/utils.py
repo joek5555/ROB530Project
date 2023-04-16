@@ -278,6 +278,7 @@ def plot_robot_paths(data, robot_list):
         # Format and save figure
         plt.title(f'Path of Robot {i+1}')
         plt.legend(['Groundtruth', 'Estimate'])
+        plt.axis('equal')
 
         plt.savefig(f'PF_landmarks/saved_images/robot_{i+1}_path.png')
         plt.close()
