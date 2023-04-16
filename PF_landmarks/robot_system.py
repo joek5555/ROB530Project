@@ -55,7 +55,7 @@ class robot_system():
         particles = np.array(self.pf.particles.state)
         weights = np.array(self.pf.particles.weight)
 
-        # mean = np.average(particles, axis=0, weights=weights)
+        mean = np.average(particles, axis=0, weights=weights)
         mean = np.average(particles, axis=0)
         return mean
 
