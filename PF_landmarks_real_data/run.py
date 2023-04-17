@@ -178,7 +178,7 @@ while True:
         z = np.array([robot.measurement_data[robot.measurement_index, 2], robot.measurement_data[robot.measurement_index, 3]])
         landmark_id = int(robot.measurement_data[robot.measurement_index, 1])
         timestamp = robot.measurement_data[robot.measurement_index, 0]
-        if distance_threshold is not None and z[0] <= distance_threshold:
+        if distance_threshold is None or z[0] <= distance_threshold:
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
             if landmark_id <= param['num_robots']:
                 #or landmark_id == 3 or landmark_id == 4 or landmark_id == 5:
