@@ -190,18 +190,19 @@ while True:
                 y_uncertainty = detected_robot_covariance[1][1]
                 heading_uncertainty = detected_robot_covariance[2][2]
 
-                if x_uncertainty > (1 - confidence_threshold)*1 or y_uncertainty > (1 - confidence_threshold)*1 or heading_uncertainty > (1 - confidence_threshold)*3.14:
+                if confidence_threshold is not None and (x_uncertainty > (1 - confidence_threshold)*1 or y_uncertainty > (1 - confidence_threshold)*1 or heading_uncertainty > (1 - confidence_threshold)*3.14):
                     pass
                 else:
                     # then use this mean and variance as a measurement update
                     robot.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
 
+                    # 1-way landmark updating
                     for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
                         if landmark_id in detected_robot.detected_landmarks_pf.keys():
                             detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
                             detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
                             robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
-            
+                            
             elif landmark_id in robot.detected_landmarks_pf.keys():
 
                 # if you detect a landmark you have detected before
