@@ -290,9 +290,9 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
         axs[robot_observing - 1].scatter(groundtruth_point[1], groundtruth_point[2],s = 200, c='#6b6666', marker = "x")
 
     if observed_landmark_particles is None:
-        axs[0].set_xlim([2.5,3.8])
-        axs[0].set_ylim([-3.5,-2.2])
-        axs[1].set_xlim([0.5,1.5])
+        axs[0].set_xlim([1.5,3.8])
+        axs[0].set_ylim([-3.5,-0.8])
+        axs[1].set_xlim([0.5,4.5])
         axs[1].set_ylim([-1.5,-0.5])
         plt.savefig(path_to_images + "/image_" + str(image_num) + "_"  + label +"_time_" + str(round(current_time, 2)) + ".png")
         plt.close()
@@ -305,7 +305,8 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
         axs[robot_observing - 1].scatter(observed_landmark_particles_x, observed_landmark_particles_y, s=1, c='#ed8026', marker = "x")
         observed_landmark_mean, observed_landmark_cov = calculateMeanCovFromList(observed_landmark_particles)
         plot_covariance(axs[robot_observing - 1], observed_landmark_mean, observed_landmark_cov)
-
+        axs[0].set_aspect('equal', 'datalim')
+        axs[1].set_aspect('equal', 'datalim')
         plt.savefig(path_to_images + "/image_" + str(image_num) + "_" + label +"_time_" + str(round(current_time,2)) + ".png")
         plt.close()
 
