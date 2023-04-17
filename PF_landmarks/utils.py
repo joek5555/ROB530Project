@@ -300,13 +300,6 @@ def plot_robot_error(robot_id, means, groundtruth):
         error = np.linalg.norm(mean[1:3] - groundtruth[groundtruth_idx, 1:3])
         errors = np.append(errors, error)
 
-        print(mean[0:3])
-        print(groundtruth[groundtruth_idx, 0:3])
-        print()
-
-    print()
-    print()
-    print()
     # Format and save figure
     plt.plot(means[:, 0], errors[1:])
     plt.title(f'Robot {robot_id + 1} Error in Estimate')
