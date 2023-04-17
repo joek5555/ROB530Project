@@ -62,7 +62,7 @@ for i in range(param['num_robots']):
 
 image_num = 0
 # decide if you want to plot the measurement and motion step for each robot
-plot_motion_step = [True, True]
+plot_motion_step = [False, False]
 plot_measurement_step = [True, True]
 
 while True:
@@ -151,6 +151,8 @@ while True:
                     detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
                     detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
                     robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
+            
+            
             """
         
         elif landmark_id in robot.detected_landmarks_pf.keys():

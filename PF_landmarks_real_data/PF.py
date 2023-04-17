@@ -93,7 +93,7 @@ class particle_filter:
             self.particles.weight = new_weights.tolist()
 
             #self.resampling()
-            self.resampling(num_top_particles = 100)
+            self.resampling(num_top_particles = 60, tune_variance_factor=3)
 
         else:
             print("ERROR: Atempting to run measurement step when either measurement_covariance or measurement_model is not defined")
@@ -118,7 +118,7 @@ class particle_filter:
         self.particles.weight = new_weights.tolist()
 
         #self.resampling()
-        self.resampling(num_top_particles = 500, tune_variance_factor=2)
+        self.resampling(num_top_particles = 250, tune_variance_factor=2)
 
 
 
@@ -239,13 +239,20 @@ class particle_filter:
             top_particles = particles_data[-num_top_particles:-1]
             top_particles_state = [particle.state for particle in top_particles]
             top_particles_mean, top_particles_variance = calculateMeanCovFromList(top_particles_state)
+            print(top_particles_variance)
+            if tune_variance_factor == 2:
+                top_particles_variance = top_particles_variance * tune_variance_factor
+                if top_particles_variance[0,0] < 0.01:
+                    top_particles_variance[0,0] = 0.01
+                if top_particles_variance[1,1] < 0.01:
+                    top_particles_variance[1,1] = 0.01
 
-            if tune_variance_factor > 0:
-                diagonal = top_particles_variance.diagonal()
-                mean_variance = np.mean(diagonal)
-                #greatest_variance = np.amax(diagonal)
-                top_particles_variance = np.eye(top_particles_mean.shape[0]) * mean_variance * tune_variance_factor
+            if tune_variance_factor == 3:
+                top_particles_variance = top_particles_variance * 2
+                if top_particles_variance[0,0] < 0.005 or top_particles_variance[1,1] < 0.005 or top_particles_variance[2,2] < 0.0076:
+                    top_particles_variance = np.array([[0.005, 0, 0],[0, 0.005, 0],[0, 0, 0.0076]])
 
+            print(top_particles_variance)
             variance_L = np.linalg.cholesky(top_particles_variance)
 
             while len(top_particles_state) < self.num_particles:
