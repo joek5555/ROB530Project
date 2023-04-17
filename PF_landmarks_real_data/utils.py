@@ -347,6 +347,8 @@ def plot_robot_paths_and_error(data, robot_list):
         plt.close()
 
         plot_robot_error(i, means, groundtruth)
+        plot_robot_position_uncertainties(robot_list[i], i)
+        plot_robot_heading_uncertainties(robot_list[i], i)
 
 
 def plot_robot_error(robot_id, means, groundtruth):
@@ -372,4 +374,33 @@ def plot_robot_error(robot_id, means, groundtruth):
     image_path = get_path_to_saved_images()
 
     plt.savefig(f'{image_path}/robot_{robot_id + 1}_error.png')
+    plt.close()
+
+def plot_robot_position_uncertainties(robot, robot_id):
+    x_uncertainties, y_uncertainties = robot.get_uncertainties()[0], robot.get_uncertainties()[1]
+
+    # Format and save figure
+    plt.plot(x_uncertainties[:, 0], x_uncertainties[:, 1])
+    plt.plot(y_uncertainties[:, 0], y_uncertainties[:, 1])
+    plt.title(f'Robot {robot_id + 1} Position Uncertainties')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Error (m)')
+    plt.legend(["x uncertainties", "y uncertainties"])
+
+    image_path = get_path_to_saved_images()
+
+    plt.savefig(f'{image_path}/robot_{robot_id + 1}_position_uncertainties.png')
+    plt.close()
+
+def plot_robot_heading_uncertainties(robot, robot_id):
+    heading_uncertainties = robot.get_uncertainties()[2]
+    # Format and save figure
+    plt.plot(heading_uncertainties[:, 0], heading_uncertainties[:, 1])
+    plt.title(f'Robot {robot_id + 1} Heading Uncertainties')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Error (rad)')
+
+    image_path = get_path_to_saved_images()
+
+    plt.savefig(f'{image_path}/robot_{robot_id + 1}_heading_uncertainties.png')
     plt.close()

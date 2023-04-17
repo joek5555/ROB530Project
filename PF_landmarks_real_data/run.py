@@ -1,10 +1,39 @@
 import numpy as np
-
+import argparse
 import yaml
 from robot_system import robot_system
 import models
 from utils import read_data, robot_sorting, calculateMeanCovFromList, getLandmarkParticles, plot, plot_robot_paths_and_error
 from PF import particle_filter
+
+def confidence_val(x):
+    try:
+        x = float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("%r not a floating-point literal" % (x,))
+
+    if x < 0.0 or x > 1.0:
+        raise argparse.ArgumentTypeError("confidence rating value must be in [0.0, 1.0]"%(x,))
+    return x
+
+def distance_val(x):
+    try:
+        x = float(x)
+    except ValueError:
+        raise argparse.ArgumentTypeError("%r not a floating-point literal" % (x,))
+
+    if x <= 0.0:
+        raise argparse.ArgumentTypeError("distance restriction value must be >0")
+    return x
+
+parser = argparse.ArgumentParser(description='Run localization')
+parser.add_argument('-d', '--distance_restriction', type=distance_val, help= 'incorporate distance restriction on detection')
+parser.add_argument('-c,', '--confidence_rating', type=confidence_val, help= 'incorporate confidence rating of localization needed to broadcast information to other robots')
+
+args = parser.parse_args()
+
+distance_threshold = args.distance_restriction
+confidence_threshold = args.confidence_rating
 
 # settings.yaml contains many of the parameters to be tuned
 # this opens up settings.yaml and saves the data in the param object
@@ -45,6 +74,12 @@ for i in range(param['num_robots']):
     timestamped_mean = np.insert(timestamped_mean, 0, data.robots[i].groundtruth[0, 0])
     robot.means = np.array([timestamped_mean])
 
+    timestamped_cov = param['robot_initial_covariance']
+    timestamped_cov = np.insert(timestamped_cov, 0, data.robots[i].groundtruth[0, 0])
+    robot.x_uncertainties = np.array([timestamped_cov])
+    robot.y_uncertainties = np.array([timestamped_cov])
+    robot.theta_uncertainties = np.array([timestamped_cov])
+
     robot.robot_particle_color = param['robot_particle_color'][i]
     robot.measurement_particle_color = param['measurement_particle_color'][i]
 
@@ -66,7 +101,7 @@ for i in range(param['num_robots']):
 
 image_num = 0
 # decide if you want to plot the measurement and motion step for each robot
-plot_motion_step = [True, True]
+plot_motion_step = [False, False]
 plot_measurement_step = [True, True]
 
 while True:
@@ -143,57 +178,62 @@ while True:
         z = np.array([robot.measurement_data[robot.measurement_index, 2], robot.measurement_data[robot.measurement_index, 3]])
         landmark_id = int(robot.measurement_data[robot.measurement_index, 1])
         timestamp = robot.measurement_data[robot.measurement_index, 0]
-
+        if distance_threshold is not None and z[0] <= distance_threshold:
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
-        if landmark_id <= param['num_robots'] or landmark_id == 3 or landmark_id == 4 or landmark_id == 5:
-            pass
-            """
-            # if you detect another robot
-            # 'communicate' with the robot and get the mean and covariance associated with its location
-            detected_robot = robot_list[landmark_id-1]
-            detected_robot_mean, detected_robot_covariance = calculateMeanCovFromList(detected_robot.pf.particles.state)
-            # then use this mean and variance as a measurement update
-            robot.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
+            if landmark_id <= param['num_robots']:
+                #or landmark_id == 3 or landmark_id == 4 or landmark_id == 5:
+                # if you detect another robot
+                # 'communicate' with the robot and get the mean and covariance associated with its location
+                detected_robot = robot_list[landmark_id-1]
+                detected_robot_mean, detected_robot_covariance = calculateMeanCovFromList(detected_robot.pf.particles.state)
+                x_uncertainty = detected_robot_covariance[0][0]
+                y_uncertainty = detected_robot_covariance[1][1]
+                heading_uncertainty = detected_robot_covariance[2][2]
 
-            for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
-                 if landmark_id in detected_robot.detected_landmarks_pf.keys():
-                    detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
-                    detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
-                    robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
-            """
-        
-        elif landmark_id in robot.detected_landmarks_pf.keys():
+                if x_uncertainty > (1 - confidence_threshold)*1 or y_uncertainty > (1 - confidence_threshold)*1 or heading_uncertainty > (1 - confidence_threshold)*3.14:
+                    pass
+                else:
+                    # then use this mean and variance as a measurement update
+                    robot.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
 
-            # if you detect a landmark you have detected before
-            # get a list of particles representing where this landmark could be based on where the robot
-            # currently thinks it is and the inverse_measurement_model
-            detected_landmark_particles = getLandmarkParticles(z, robot.inverse_measurement_model, robot.measurement_covariance, 
-                                                               robot.pf.particles.state, param['num_measurement_particles_per_robot_particle'])
-            # calculate the mean and covariance of this detected landmark, then use that as a measurement update for the landmark pf
-            current_landmark_mean, current_landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
-            detected_landmark_mean, detected_landmark_covariance = calculateMeanCovFromList(detected_landmark_particles)
+                    for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
+                        if landmark_id in detected_robot.detected_landmarks_pf.keys():
+                            detected_robot_landmark_particles = detected_robot.detected_landmarks_pf[landmark_id].particles.state
+                            detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
+                            robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
             
-            #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
+            elif landmark_id in robot.detected_landmarks_pf.keys():
 
-            # plot the detected landmark so that we can see if measurement update was reasonable
-            if plot_measurement_step[robot.id-1]:
-                label = "R" + str(robot.id) + "_land_update"
-                plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
-                    observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
+                # if you detect a landmark you have detected before
+                # get a list of particles representing where this landmark could be based on where the robot
+                # currently thinks it is and the inverse_measurement_model
+                detected_landmark_particles = getLandmarkParticles(z, robot.inverse_measurement_model, robot.measurement_covariance, 
+                                                                robot.pf.particles.state, param['num_measurement_particles_per_robot_particle'])
+                # calculate the mean and covariance of this detected landmark, then use that as a measurement update for the landmark pf
+                current_landmark_mean, current_landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
+                detected_landmark_mean, detected_landmark_covariance = calculateMeanCovFromList(detected_landmark_particles)
                 
-            #update the landmark's particle filter
-            robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
-            #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
-            #robot.detected_landmarks_pf[landmark_id].measurement_step_combine_gaussians(detected_landmark_mean, detected_landmark_covariance)
-            
-            if plot_measurement_step[robot.id-1]:
-                label = "R" + str(robot.id) + "_land_updated"
-                plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
-                    observed_landmark_particles = [np.array([0,0])], robot_observing = robot.id, groundtruth_point = groundtruth)
+                #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
+
+                # plot the detected landmark so that we can see if measurement update was reasonable
+                if plot_measurement_step[robot.id-1]:
+                    label = "R" + str(robot.id) + "_land_update"
+                    plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
+                        observed_landmark_particles = detected_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
+                    
+                #update the landmark's particle filter
+                robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_landmark_mean, detected_landmark_covariance)
+                #robot.detected_landmarks_pf[landmark_id].measurement_step_compare_particles(detected_landmark_particles)
+                #robot.detected_landmarks_pf[landmark_id].measurement_step_combine_gaussians(detected_landmark_mean, detected_landmark_covariance)
                 
-            # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
-            landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
-            robot.pf.measurement_step(z, landmark_mean, landmark_covariance)
+                if plot_measurement_step[robot.id-1]:
+                    label = "R" + str(robot.id) + "_land_updated"
+                    plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
+                        observed_landmark_particles = [np.array([0,0])], robot_observing = robot.id, groundtruth_point = groundtruth)
+                    
+                # now that the landmark has been detected at least twice, we can update our robot position based on this landmark measurement
+                landmark_mean, landmark_covariance = calculateMeanCovFromList(robot.detected_landmarks_pf[landmark_id].particles.state)
+                robot.pf.measurement_step(z, landmark_mean, landmark_covariance)
 
 
         else:
@@ -207,7 +247,6 @@ while True:
             robot.detected_landmarks_pf[landmark_id] = particle_filter( 
                 given_starting_particles = detected_landmark_particles)
 
-        
         # plot the measurement step
         if plot_measurement_step[robot.id-1]:
             label = "R" + str(robot.id) + "measure"
@@ -220,9 +259,11 @@ while True:
             robot.check_if_reached_end_of_measurement = param['max_runtime']
             robot.measurement_index = 0 # no longer use measurement index, ensures it is not out of scope of data
 
-        
+
     # Keep track of the estimate
+    new_mean, new_cov = calculateMeanCovFromList(robot.pf.particles.state)    
     robot.log_mean(timestamp)
+    robot.log_uncertainties(timestamp, new_cov)
     
 
 plot_robot_paths_and_error(data, robot_list)

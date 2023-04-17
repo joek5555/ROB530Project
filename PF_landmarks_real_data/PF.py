@@ -95,6 +95,8 @@ class particle_filter:
             #self.resampling()
             self.resampling(num_top_particles = 100)
 
+            
+
         else:
             print("ERROR: Atempting to run measurement step when either measurement_covariance or measurement_model is not defined")
 

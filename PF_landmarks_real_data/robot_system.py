@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class robot_system():
 
     def __init__(self):
@@ -35,7 +34,9 @@ class robot_system():
         self.groundtruth_index = None
 
         self.means = None
-
+        self.x_uncertainties = None
+        self.y_uncertainties = None
+        self.theta_uncertainties = None
 
     def get_means(self):
         return self.means
@@ -61,3 +62,16 @@ class robot_system():
         mean = np.average(particles, axis=0)
         return mean
     
+    def get_uncertainties(self):
+        return self.x_uncertainties, self.y_uncertainties, self.theta_uncertainties
+    
+    def log_uncertainties(self, timestamp, cov_mat):
+        x_uncertainty = cov_mat[0][0]
+        y_uncertainty = cov_mat[1][1]
+        theta_uncertainty = cov_mat[2][2]
+        added_x_uncertainty = np.array([[timestamp, x_uncertainty]])
+        added_y_uncertainty = np.array([[timestamp, y_uncertainty]])
+        added_theta_uncertainty = np.array([[timestamp, theta_uncertainty]])
+        self.x_uncertainties = np.append(self.x_uncertainties, added_x_uncertainty, axis=0)
+        self.y_uncertainties = np.append(self.y_uncertainties, added_y_uncertainty, axis=0)
+        self.theta_uncertainties = np.append(self.theta_uncertainties, added_theta_uncertainty, axis=0)
