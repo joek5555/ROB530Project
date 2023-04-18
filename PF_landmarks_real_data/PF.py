@@ -93,7 +93,7 @@ class particle_filter:
             self.particles.weight = new_weights.tolist()
 
             #self.resampling()
-            self.resampling(num_top_particles = 100, tune_variance_factor=0)
+            self.resampling(num_top_particles = 40, tune_variance_factor=3)
 
         else:
             print("ERROR: Atempting to run measurement step when either measurement_covariance or measurement_model is not defined")
@@ -118,7 +118,7 @@ class particle_filter:
         self.particles.weight = new_weights.tolist()
 
         #self.resampling()
-        self.resampling(num_top_particles = 1000, tune_variance_factor=0)
+        self.resampling(num_top_particles = 250, tune_variance_factor=2)
 
 
 
@@ -241,15 +241,45 @@ class particle_filter:
                 self.particles.state = particle_state
                 self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
 
-            else:
+                #for i in range(num_top_particles)
 
+            
+            elif tune_variance_factor == 2:
+                
+                particle_state = [particle.state for particle in particles_data]
+                particles_mean, particles_variance = calculateMeanCovFromList(particle_state)
+                variance_L = np.linalg.cholesky(np.array([[0.005, 0],[0, 0.005]]))
+                for i in range(num_top_particles):
+                    particle_state[len(particle_state)-i-1] = (np.dot(variance_L, np.random.randn(particles_mean.shape[0], 1)) + particles_mean.reshape(-1,1)).reshape(-1)
+                self.particles.state = particle_state
+                self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
+
+            elif tune_variance_factor == 3:
+                particle_state = [particle.state for particle in particles_data]
+                particles_mean, particles_variance = calculateMeanCovFromList(particle_state)
+                variance_L = np.linalg.cholesky(np.array([[0.005, 0, 0],[0, 0.005, 0], [0, 0, 0.076]]))
+                for i in range(num_top_particles):
+                    particle_state[len(particle_state)-i-1] = (np.dot(variance_L, np.random.randn(particles_mean.shape[0], 1)) + particles_mean.reshape(-1,1)).reshape(-1)
+                self.particles.state = particle_state
+                self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
+
+                """
+                particle_state = [particle.state for particle in particles_data]
+                particles_mean, particles_variance = calculateMeanCovFromList(particle_state)
                 top_particles = particles_data[-num_top_particles:-1]
                 top_particles_state = [particle.state for particle in top_particles]
                 top_particles_mean, top_particles_variance = calculateMeanCovFromList(top_particles_state)
-                #print(top_particles_variance)
+                variance_L = np.linalg.cholesky(particles_variance)
+                particle_state.clear()
 
+                while len(particle_state) < self.num_particles:
+                    particle_state.append((np.dot(variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
+
+                self.particles.state = particle_state
+                self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
+                """
                 
-
+                """
                 if tune_variance_factor == 2:
                     #one_variance_L = np.linalg.cholesky(top_particles_variance)
                     top_particles_variance = top_particles_variance * tune_variance_factor
@@ -270,13 +300,13 @@ class particle_filter:
 
                 #print(top_particles_variance)
                 variance_L = np.linalg.cholesky(top_particles_variance)
-
+                
             
                 
                 self.particles.state = top_particles_state
                 
                 self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
-
+                """
 
 
 def weight_sorting(particle):

@@ -102,8 +102,8 @@ for i in range(param['num_robots']):
 
 image_num = 0
 # decide if you want to plot the measurement and motion step for each robot
-plot_motion_step = [False, False]
-plot_measurement_step = [True, True]
+plot_motion_step = [False, False, False, False, False]
+plot_measurement_step = [False, False, False, False, False]
 
 while True:
     print(image_num)
@@ -168,7 +168,7 @@ while True:
         
 
     else:
-        
+
         # measurement timestep is sooner
 
         # assume that since odometry comes in faster than measurements, the groundtruth for the last odometry 
@@ -183,6 +183,36 @@ while True:
         # if the landmark id is less than or equal to the number of robots, you have detected a robot
             if (landmark_id <= param['num_robots']):
                 pass
+                
+                detected_robot = robot_list[landmark_id-1]
+                detected_robot_mean, detected_robot_covariance = calculateMeanCovFromList(detected_robot.pf.particles.state[0:60])
+                # robot.pf.measurement_step(z, detected_robot_mean[0:2], detected_robot_covariance[0:2, 0:2])
+                # if plot_measurement_step[robot.id-1]:
+                #     label = "R" + str(robot.id) + "detect R" + str(detected_robot.id)
+                #     plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label, robot_observing=robot.id, groundtruth_point = groundtruth)
+                #     image_num += 1
+
+                for landmark_id, landmark_pf in detected_robot.detected_landmarks_pf.items():
+                    detected_robot_landmark_particles = landmark_pf.particles.state
+                    detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles[0:750]) 
+                    #print(landmark_id)
+                    #print(detected_robot_landmark_covariance)
+                    if detected_robot_landmark_covariance[0,0] < 0.1 and detected_robot_landmark_covariance[1,1] < 0.1:
+                        if landmark_id in robot.detected_landmarks_pf.keys():
+                            robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
+                        else:
+                            robot.detected_landmarks_pf[landmark_id] = particle_filter( 
+                                given_starting_particles = detected_robot_landmark_particles.copy())
+                                                   
+                        
+                        if plot_measurement_step[robot.id-1]:
+                            label = "R" + str(robot.id) + "detect R" + str(detected_robot.id)
+                            #plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label, robot_observing=robot.id, groundtruth_point = groundtruth)
+                            plot(robot_list, data, image_num, robot.measurement_data[robot.measurement_index, 0], label,
+                                observed_landmark_particles = detected_robot_landmark_particles, robot_observing = robot.id, groundtruth_point = groundtruth)
+                            image_num += 1
+                
+
                 """
                 # if you detect another robot
                 # 'communicate' with the robot and get the mean and covariance associated with its location
@@ -204,7 +234,8 @@ while True:
                             detected_robot_landmark_mean, detected_robot_landmark_covariance = calculateMeanCovFromList(detected_robot_landmark_particles)  
                             robot.detected_landmarks_pf[landmark_id].measurement_step_landmarks(detected_robot_landmark_mean, detected_robot_landmark_covariance)
                 """
-            elif landmark_id == 3 or landmark_id == 4 or landmark_id == 5 or landmark_id == 15:
+        
+            elif landmark_id == 15:
                 pass
             elif landmark_id in robot.detected_landmarks_pf.keys():
 
@@ -258,8 +289,8 @@ while True:
                 # create a particle filter associated with this landmark and add it to the robot.detected_landmarks_pf list
                 robot.detected_landmarks_pf[landmark_id] = particle_filter( 
                     given_starting_particles = detected_landmark_particles)
-
-       
+            
+        
         
         
         robot.measurement_index += 1

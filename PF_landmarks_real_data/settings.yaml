@@ -17,7 +17,7 @@ robot_inverse_y_covariance: 0.01
 
 #robot_alphas_sqrt: [0.0025, 0.0005, 0.0025, 0.0005, 0.0025, 0.0005] # suggested by HW5
 #robot_alphas_sqrt: [0.05, 0.005, 0.05, 0.005, 0.05, 0.005] # worked well for test data
-robot_alphas_sqrt: [1.2, 0.2, 1.2, 0.2, 0.0025, 0.0005]
+robot_alphas_sqrt: [0.75, 0.15, 0.75, 0.15, 0.025, 0.005]
 
 robot_particle_color:
   - '#660c05'

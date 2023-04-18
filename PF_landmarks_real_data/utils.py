@@ -29,6 +29,18 @@ def read_data(max_runtime):
     robot2_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Measurement_x.dat'))
     robot2_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot2_Odometry.dat'))
 
+    robot3_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot3_Groundtruth.dat'))
+    robot3_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot3_Measurement_x.dat'))
+    robot3_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot3_Odometry.dat'))
+
+    robot4_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot4_Groundtruth.dat'))
+    robot4_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot4_Measurement_x.dat'))
+    robot4_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot4_Odometry.dat'))
+
+    robot5_groundtruth_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot5_Groundtruth.dat'))
+    robot5_measurement_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot5_Measurement_x.dat'))
+    robot5_odometry_path = os.path.realpath(os.path.join(os.path.dirname(__file__), '..', 'UTIAS-dataset/MRCLAM_Dataset1', 'Robot5_Odometry.dat'))
+
     data.landmark_groundtruth = np.loadtxt(landmark_groundtruth_path)
 
     max_runtime +=1248270000
@@ -88,10 +100,92 @@ def read_data(max_runtime):
     robot2.measurements = np.hstack([(robot2_measurements_long - 1248270000).reshape(-1,1), robot2_measurements]).astype(np.float64)
     robot2.odometry = np.hstack([(robot2_odometry_long - 1248270000).reshape(-1,1), robot2_odometry]).astype(np.float64) 
 
+    robot3 = robot_data_structure()
+    robot3_groundtruth_long = np.loadtxt(robot3_groundtruth_path, dtype=np.longdouble)[:,0]
+    robot3_measurements_long = np.loadtxt(robot3_measurement_path, dtype=np.longdouble)[:,0]
+    robot3_odometry_long = np.loadtxt(robot3_odometry_path, dtype=np.longdouble)[:,0]
+    robot3_groundtruth = np.loadtxt(robot3_groundtruth_path)[:,1:]
+    robot3_measurements = np.loadtxt(robot3_measurement_path)[:,1:]
+    robot3_odometry = np.loadtxt(robot3_odometry_path)[:,1:]
 
+    for i in range(robot3_groundtruth_long.shape[0]):
+        if robot3_groundtruth_long[i] > max_runtime:
+            robot3_groundtruth_long = robot3_groundtruth_long[0:i+1]
+            robot3_groundtruth = robot3_groundtruth[0:i+1, :]
+            break
+    for i in range(robot3_measurements.shape[0]):
+        if robot3_measurements_long[i] > max_runtime:
+            robot3_measurements_long = robot3_measurements_long[0:i]
+            robot3_measurements = robot3_measurements[0:i, :]
+            break
+    for i in range(robot3_odometry.shape[0]):
+        if robot3_odometry_long[i] > max_runtime:
+            robot3_odometry_long = robot3_odometry_long[0:i]
+            robot3_odometry = robot3_odometry[0:i, :]
+            break
+
+    robot3.groundtruth = np.hstack([(robot3_groundtruth_long - 1248270000).reshape(-1,1), robot3_groundtruth]).astype(np.float64)
+    robot3.measurements = np.hstack([(robot3_measurements_long - 1248270000).reshape(-1,1), robot3_measurements]).astype(np.float64)
+    robot3.odometry = np.hstack([(robot3_odometry_long - 1248270000).reshape(-1,1), robot3_odometry]).astype(np.float64) 
+
+    robot4 = robot_data_structure()
+    robot4_groundtruth_long = np.loadtxt(robot4_groundtruth_path, dtype=np.longdouble)[:,0]
+    robot4_measurements_long = np.loadtxt(robot4_measurement_path, dtype=np.longdouble)[:,0]
+    robot4_odometry_long = np.loadtxt(robot4_odometry_path, dtype=np.longdouble)[:,0]
+    robot4_groundtruth = np.loadtxt(robot4_groundtruth_path)[:,1:]
+    robot4_measurements = np.loadtxt(robot4_measurement_path)[:,1:]
+    robot4_odometry = np.loadtxt(robot4_odometry_path)[:,1:]
+
+    for i in range(robot4_groundtruth_long.shape[0]):
+        if robot4_groundtruth_long[i] > max_runtime:
+            robot4_groundtruth_long = robot4_groundtruth_long[0:i+1]
+            robot4_groundtruth = robot4_groundtruth[0:i+1, :]
+            break
+    for i in range(robot4_measurements.shape[0]):
+        if robot4_measurements_long[i] > max_runtime:
+            robot4_measurements_long = robot4_measurements_long[0:i]
+            robot4_measurements = robot4_measurements[0:i, :]
+            break
+    for i in range(robot4_odometry.shape[0]):
+        if robot4_odometry_long[i] > max_runtime:
+            robot4_odometry_long = robot4_odometry_long[0:i]
+            robot4_odometry = robot4_odometry[0:i, :]
+            break
+
+    robot4.groundtruth = np.hstack([(robot4_groundtruth_long - 1248270000).reshape(-1,1), robot4_groundtruth]).astype(np.float64)
+    robot4.measurements = np.hstack([(robot4_measurements_long - 1248270000).reshape(-1,1), robot4_measurements]).astype(np.float64)
+    robot4.odometry = np.hstack([(robot4_odometry_long - 1248270000).reshape(-1,1), robot4_odometry]).astype(np.float64) 
+
+    robot5 = robot_data_structure()
+    robot5_groundtruth_long = np.loadtxt(robot5_groundtruth_path, dtype=np.longdouble)[:,0]
+    robot5_measurements_long = np.loadtxt(robot5_measurement_path, dtype=np.longdouble)[:,0]
+    robot5_odometry_long = np.loadtxt(robot5_odometry_path, dtype=np.longdouble)[:,0]
+    robot5_groundtruth = np.loadtxt(robot5_groundtruth_path)[:,1:]
+    robot5_measurements = np.loadtxt(robot5_measurement_path)[:,1:]
+    robot5_odometry = np.loadtxt(robot5_odometry_path)[:,1:]
+
+    for i in range(robot5_groundtruth_long.shape[0]):
+        if robot5_groundtruth_long[i] > max_runtime:
+            robot5_groundtruth_long = robot5_groundtruth_long[0:i+1]
+            robot5_groundtruth = robot5_groundtruth[0:i+1, :]
+            break
+    for i in range(robot5_measurements.shape[0]):
+        if robot5_measurements_long[i] > max_runtime:
+            robot5_measurements_long = robot5_measurements_long[0:i]
+            robot5_measurements = robot5_measurements[0:i, :]
+            break
+    for i in range(robot5_odometry.shape[0]):
+        if robot5_odometry_long[i] > max_runtime:
+            robot5_odometry_long = robot5_odometry_long[0:i]
+            robot5_odometry = robot5_odometry[0:i, :]
+            break
+
+    robot5.groundtruth = np.hstack([(robot5_groundtruth_long - 1248270000).reshape(-1,1), robot5_groundtruth]).astype(np.float64)
+    robot5.measurements = np.hstack([(robot5_measurements_long - 1248270000).reshape(-1,1), robot5_measurements]).astype(np.float64)
+    robot5.odometry = np.hstack([(robot5_odometry_long - 1248270000).reshape(-1,1), robot5_odometry]).astype(np.float64) 
     
 
-    data.robots = [robot1, robot2]
+    data.robots = [robot1, robot2, robot3, robot4, robot5]
 
 
     return(data)
