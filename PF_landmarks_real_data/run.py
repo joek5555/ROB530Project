@@ -252,7 +252,8 @@ while True:
                 # if this is the first time you have detected the landmark
                 # get a list of particles representing where this landmark could be based on where the robot
                 # currently thinks it is and the inverse_measurement_model
-                detected_landmark_particles = getLandmarkParticles(z, robot.inverse_measurement_model, robot.measurement_covariance, 
+                detected_landmark_particles = getLandmarkParticles(z, robot.inverse_measurement_model, 
+                    np.array([[param['robot_inverse_x_covariance'], 0],[0, param['robot_inverse_y_covariance']]]), 
                                                                 robot.pf.particles.state, param['num_measurement_particles_per_robot_particle'])
                 # create a particle filter associated with this landmark and add it to the robot.detected_landmarks_pf list
                 robot.detected_landmarks_pf[landmark_id] = particle_filter( 

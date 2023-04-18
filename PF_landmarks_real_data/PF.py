@@ -93,9 +93,7 @@ class particle_filter:
             self.particles.weight = new_weights.tolist()
 
             #self.resampling()
-            self.resampling(num_top_particles = 33, tune_variance_factor=3)
-
-            
+            self.resampling(num_top_particles = 100, tune_variance_factor=0)
 
         else:
             print("ERROR: Atempting to run measurement step when either measurement_covariance or measurement_model is not defined")
@@ -120,7 +118,7 @@ class particle_filter:
         self.particles.weight = new_weights.tolist()
 
         #self.resampling()
-        self.resampling(num_top_particles = 250, tune_variance_factor=-1)
+        self.resampling(num_top_particles = 1000, tune_variance_factor=0)
 
 
 
@@ -238,67 +236,46 @@ class particle_filter:
             #    print(particles_data[-i].state)
             #    print(particles_data[-i].weight)
 
-            top_particles = particles_data[-num_top_particles:-1]
-            top_particles_state = [particle.state for particle in top_particles]
-            top_particles_mean, top_particles_variance = calculateMeanCovFromList(top_particles_state)
+            if tune_variance_factor == 0:
+                particle_state = [particle.state for particle in particles_data]
+                self.particles.state = particle_state
+                self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
 
-            if tune_variance_factor > 0:
-                variance_L = np.linalg.cholesky(top_particles_variance * tune_variance_factor)
+            else:
 
-                while len(top_particles_state) < self.num_particles:
-                    top_particles_state.append((np.dot(variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-            
-            elif tune_variance_factor == -1: 
-                top_particles_variance = top_particles_variance * 2
-                if top_particles_variance[0,0] < 0.005:
-                    top_particles_variance[0,0] = 0.005
-                if top_particles_variance[1,1] < 0.005:
-                    top_particles_variance[1,1] = 0.005
+                top_particles = particles_data[-num_top_particles:-1]
+                top_particles_state = [particle.state for particle in top_particles]
+                top_particles_mean, top_particles_variance = calculateMeanCovFromList(top_particles_state)
+                #print(top_particles_variance)
+
+                
+
+                if tune_variance_factor == 2:
+                    #one_variance_L = np.linalg.cholesky(top_particles_variance)
+                    top_particles_variance = top_particles_variance * tune_variance_factor
+                    if top_particles_variance[0,0] < 0.005:
+                        top_particles_variance[0,0] = 0.005
+                    if top_particles_variance[1,1] < 0.005:
+                        top_particles_variance[1,1] = 0.005
+
+                if tune_variance_factor == 3:
+                    top_particles_variance = top_particles_variance * 2
+                    one_variance_L = np.linalg.cholesky(top_particles_variance)
+                    if top_particles_variance[0,0] < 0.01 or top_particles_variance[1,1] < 0.01 or top_particles_variance[2,2] < 0.0076:
+                        top_particles_variance = np.array([[0.01, 0, 0],[0, 0.01, 0],[0, 0, 0.0076]])
+                    variance_L = np.linalg.cholesky(top_particles_variance)
+                    
+                    while len(top_particles_state) < 60:
+                        top_particles_state.append((np.dot(one_variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
+
+                #print(top_particles_variance)
                 variance_L = np.linalg.cholesky(top_particles_variance)
-                
-                #while len(top_particles_state) < 500:
-                #    top_particles_state.append((np.dot(one_variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
 
-                while len(top_particles_state) < self.num_particles:
-                    top_particles_state.append((np.dot(variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-                      
-
-            """
-            if tune_variance_factor == 2:
-                #one_variance_L = np.linalg.cholesky(top_particles_variance)
-                top_particles_variance = top_particles_variance * tune_variance_factor
-                if top_particles_variance[0,0] < 0.005:
-                    top_particles_variance[0,0] = 0.005
-                if top_particles_variance[1,1] < 0.005:
-                    top_particles_variance[1,1] = 0.005
-                variance_L = np.linalg.cholesky(top_particles_variance)
-                
-                #while len(top_particles_state) < 500:
-                #    top_particles_state.append((np.dot(one_variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-
-                while len(top_particles_state) < self.num_particles:
-                    top_particles_state.append((np.dot(variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-                
-
-            if tune_variance_factor == 3:
-                top_particles_variance = top_particles_variance * 2
-                one_variance_L = np.linalg.cholesky(top_particles_variance)
-                if top_particles_variance[0,0] < 0.01 or top_particles_variance[1,1] < 0.01 or top_particles_variance[2,2] < 0.0076:
-                    top_particles_variance = np.array([[0.01, 0, 0],[0, 0.01, 0],[0, 0, 0.0076]])
-                variance_L = np.linalg.cholesky(top_particles_variance)
-                
-                while len(top_particles_state) < 60:
-                    top_particles_state.append((np.dot(one_variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-
-                while len(top_particles_state) < self.num_particles:
-                    top_particles_state.append((np.dot(variance_L, np.random.randn(top_particles_mean.shape[0], 1)) + top_particles_mean.reshape(-1,1)).reshape(-1))
-            """
-
-          
             
-            self.particles.state = top_particles_state
-            
-            self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
+                
+                self.particles.state = top_particles_state
+                
+                self.particles.weight = (np.ones(self.num_particles) * (1/self.num_particles)).tolist()
 
 
 

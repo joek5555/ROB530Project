@@ -273,15 +273,15 @@ def plot(robots, data, image_num, current_time, label, observed_landmark_particl
             robot_groundtruth_y = robot_groundtruth_data.groundtruth[:,2]
             axs[i].plot(robot_groundtruth_x, robot_groundtruth_y, robot_groundtruth_colors[j])
 
-            robot_particles_x = (np.array(robot.pf.particles.state))[:,0]
-            robot_particles_y = (np.array(robot.pf.particles.state))[:,1]
+            robot_particles_x = (np.array(robot.pf.particles.state))[80:,0]
+            robot_particles_y = (np.array(robot.pf.particles.state))[80:,1]
             axs[i].scatter(robot_particles_x, robot_particles_y, s=1, c= robot.robot_particle_color)
             robot_mean, robot_cov = calculateMeanCovFromList(robot.pf.particles.state)
             plot_covariance(axs[i], robot_mean, robot_cov)
 
         for landmark_id, landmark_pf in robot.detected_landmarks_pf.items():
-            landmark_particles_x = (np.array(landmark_pf.particles.state))[:,0]
-            landmark_particles_y = (np.array(landmark_pf.particles.state))[:,1]
+            landmark_particles_x = (np.array(landmark_pf.particles.state))[800:,0]
+            landmark_particles_y = (np.array(landmark_pf.particles.state))[800:,1]
             axs[i].scatter(landmark_particles_x, landmark_particles_y, s=1, c=robot.measurement_particle_color)
             landmark_mean, landmark_cov = calculateMeanCovFromList(landmark_pf.particles.state)
             plot_covariance(axs[i], landmark_mean, landmark_cov)
