@@ -32,9 +32,8 @@ parser.add_argument('-c,', '--confidence_rating', type=confidence_val, help= 'in
 
 args = parser.parse_args()
 
-#distance_threshold = args.distance_restriction
-distance_threshold = 6.0
-#confidence_threshold = args.confidence_rating
+distance_threshold = args.distance_restriction
+confidence_threshold = args.confidence_rating
 
 # settings.yaml contains many of the parameters to be tuned
 # this opens up settings.yaml and saves the data in the param object
@@ -106,7 +105,7 @@ plot_motion_step = [False, False, False, False, False]
 plot_measurement_step = [False, False, False, False, False]
 
 while True:
-    print(image_num)
+    #print(image_num)
 
     # sort the robot list by the sorting robot function
     # this sorts the robots in acending timestep, where the timestep is the 
