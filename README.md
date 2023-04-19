@@ -16,4 +16,5 @@ The utils.py file contains helper function to read the data, plot the data, and 
 
 To run the dataset, please launch the run.py file. For the UTIAS dataset, you can use the -d tag to specity the maximum distance the robot can detect measurements. We found that limiting the robot to only detect landmarks that are fairly close (6.0 meters away) lead to good results.
 
+![animated_from_images](https://user-images.githubusercontent.com/92048856/233205552-24041044-36d6-454f-ab79-2f9ba470bf5d.gif)
 
