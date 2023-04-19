@@ -1,0 +1,32 @@
+
+
+num_robots: 2
+
+num_particles_robots: 100
+num_measurement_particles_per_robot_particle: 10
+max_runtime: 30
+
+robot_process_covariance: 0.001
+robot_measurement_covariance: 0.0001
+robot_initial_covariance: 0.0001
+
+robot_particle_color:
+  - '#660c05'
+  - '#b5b807'
+  - '#034705'
+  - '#032a6e'
+  - '#5d0463'
+
+measurement_particle_color:
+  - '#e8382a'
+  - '#f0f25a'
+  - '#5fed63'
+  - '#66bff2'
+  - '#e679ed'
+
+
+
+
+
+
+
