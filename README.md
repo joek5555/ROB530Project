@@ -1,6 +1,6 @@
 # ROB 530 Final Project:Designing a Multi-Agent Localization Algorithm w/ Selective Communication
 
-A video description of the project can be found [here](https://www.youtube.com/watch?v=877Tk2Ab3oE).
+A video description of the project can be found [here](https://www.youtube.com/watch?v=uGdUyuPvICg).
 
 This repository is designed to help address the problem of localizing robots in an unknown environment. Multiple robots starting from a known position with respect to one another will explore a new environment, trying to localize themselves and map out features in the environment. These features, or landmarks, in the environment can be classified, but it is not known ahead of time where each landmark is. 
 
