@@ -20,8 +20,6 @@ To run the algorithm, please launch the run.py file in the ```PF_landmarks_reald
 
 For information on what flags can be provided, run ```python3 run.py --help```.
 
-In the video, Robot 1 and robot 2 
-
 
 ![animated_from_images](https://user-images.githubusercontent.com/92048856/233205552-24041044-36d6-454f-ab79-2f9ba470bf5d.gif)
 
